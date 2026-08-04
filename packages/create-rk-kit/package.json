@@ -1,0 +1,23 @@
+{
+  "name": "create-rk-kit",
+  "version": "0.0.1",
+  "description": "CLI installer for the RK Kit SaaS boilerplate",
+  "type": "module",
+  "bin": {
+    "create-rk-kit": "./bin/create-rk-kit.mjs"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit false",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "latest"
+  }
+}

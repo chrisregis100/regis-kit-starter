@@ -1,4 +1,4 @@
-import type { OAuthProviderId } from "@rk-kit/auth";
+import type { OAuthProviderId, OAuthProviderStatus } from "@rk-kit/auth";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Button } from "@rk-kit/ui";
@@ -74,8 +74,18 @@ const PROVIDER_META: Record<OAuthProviderId, ProviderMeta> = {
   },
 };
 
+const PROVIDER_ENV_VARS: Record<OAuthProviderId, string> = {
+  google: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET",
+  github: "GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET",
+  facebook: "FACEBOOK_CLIENT_ID and FACEBOOK_CLIENT_SECRET",
+  apple: "APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID and APPLE_PRIVATE_KEY",
+  microsoft: "MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET",
+  discord: "DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET",
+  linkedin: "LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET",
+};
+
 interface SocialAuthButtonsProps {
-  providers: OAuthProviderId[];
+  providers: OAuthProviderStatus[];
   callbackURL?: string;
   onError?: (message: string) => void;
 }
@@ -100,22 +110,36 @@ export function SocialAuthButtons({
     }
   };
 
+  const handleDisabledClick = (provider: OAuthProviderId) => {
+    const meta = PROVIDER_META[provider];
+    const envVars = PROVIDER_ENV_VARS[provider];
+    onError?.(`${meta.label} OAuth is not configured. Add ${envVars} to your .env file.`);
+  };
+
   return (
     <div className="grid gap-2">
       {providers.map((provider) => {
-        const meta = PROVIDER_META[provider];
+        const meta = PROVIDER_META[provider.id];
+        const isLoading = loadingProvider === provider.id;
+        const title = provider.enabled
+          ? undefined
+          : `${meta.label} OAuth is not configured. Add ${PROVIDER_ENV_VARS[provider.id]} to your .env file.`;
+
         return (
           <Button
-            key={provider}
+            key={provider.id}
             type="button"
             variant="outline"
             className="w-full"
-            isLoading={loadingProvider === provider}
+            disabled={!provider.enabled || isLoading}
+            isLoading={isLoading}
             loadingText={`Continue with ${meta.label}`}
-            onClick={() => handleSocialSignIn(provider)}
+            onClick={() => (provider.enabled ? handleSocialSignIn(provider.id) : handleDisabledClick(provider.id))}
+            title={title}
           >
             {meta.icon}
             Continue with {meta.label}
+            {!provider.enabled && <span className="sr-only"> (not configured)</span>}
           </Button>
         );
       })}

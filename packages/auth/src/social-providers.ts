@@ -83,6 +83,16 @@ export function getEnabledOAuthProviders(env: ServerEnv): OAuthProviderId[] {
   return enabled;
 }
 
+export interface OAuthProviderStatus {
+  id: OAuthProviderId;
+  enabled: boolean;
+}
+
+export function getOAuthProviderStatuses(env: ServerEnv): OAuthProviderStatus[] {
+  const enabledIds = new Set(getEnabledOAuthProviders(env));
+  return OAUTH_PROVIDER_IDS.map((id) => ({ id, enabled: enabledIds.has(id) }));
+}
+
 export function buildSocialProviders(env: ServerEnv): SocialProvidersConfig {
   const providers: SocialProvidersConfig = {};
 

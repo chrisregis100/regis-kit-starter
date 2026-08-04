@@ -15,15 +15,15 @@ import {
 import { authClient } from "../lib/auth-client";
 import { AuthLayout } from "../components/shared/AuthLayout";
 import { SocialAuthButtons } from "../components/auth/SocialAuthButtons";
-import { getEnabledOAuthProvidersFn } from "../services/auth-providers-service";
+import { getOAuthProvidersStatusFn } from "../services/auth-providers-service";
 
 export const Route = createFileRoute("/login")({
-  loader: () => getEnabledOAuthProvidersFn(),
+  loader: () => getOAuthProvidersStatusFn(),
   component: LoginPage,
 });
 
 function LoginPage() {
-  const oauthProviders = Route.useLoaderData();
+  const oauthProviderStatuses = Route.useLoaderData();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +49,7 @@ function LoginPage() {
     }
   };
 
-  const hasOAuth = oauthProviders.length > 0;
+  const hasOAuth = oauthProviderStatuses.length > 0;
 
   return (
     <AuthLayout>
@@ -62,7 +62,7 @@ function LoginPage() {
         <CardContent className="space-y-4">
           {hasOAuth && (
             <SocialAuthButtons
-              providers={oauthProviders}
+              providers={oauthProviderStatuses}
               callbackURL="/dashboard"
               onError={setError}
             />

@@ -21,9 +21,11 @@ import {
   buildSocialProviders,
   buildTrustedOrigins,
   getEnabledOAuthProviders,
+  getOAuthProviderStatuses,
 } from "./social-providers.js";
 
 export const enabledOAuthProviders = getEnabledOAuthProviders(serverEnv);
+export const oauthProviderStatuses = getOAuthProviderStatuses(serverEnv);
 
 export const auth = betterAuth({
   secret: serverEnv.BETTER_AUTH_SECRET,

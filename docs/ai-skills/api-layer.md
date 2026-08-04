@@ -126,7 +126,7 @@ resolves the session and maps thrown `@rk-kit/errors` to the envelope above via
 | Domain | Server function | REST | Backend |
 |---|---|---|---|
 | Session guard | `getProtectedContext`, `getServerSession` | — | Better Auth |
-| OAuth providers | `getEnabledOAuthProvidersFn` | — | `@rk-kit/auth` |
+| OAuth providers | `getOAuthProvidersStatusFn` | — | `@rk-kit/auth` |
 | Projects — list | `listProjectsFn` | `GET /api/v1/projects` | `project-service` |
 | Projects — create | `createProjectFn` | `POST /api/v1/projects` | `project-service` |
 | Projects — read | `getProjectFn` | `GET /api/v1/projects/:id` | `project-service` |
