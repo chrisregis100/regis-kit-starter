@@ -93,7 +93,7 @@ Additional OAuth providers (Facebook, Apple, Microsoft, Discord, LinkedIn) are l
 
 ## Use a custom template repository
 
-By default the installer downloads `rk-kit/regis-kit-starter`. To use a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable:
+By default the installer downloads `/regis-kit-starter`. To use a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable:
 
 ```bash
 RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
