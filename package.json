@@ -23,5 +23,5 @@
       "rollup-plugin-dts": "^6.5.1"
     }
   },
-  "version": "0.0.1"
+  "version": "0.0.2"
 }
