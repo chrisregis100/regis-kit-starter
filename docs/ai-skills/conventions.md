@@ -48,7 +48,8 @@ const myMutation = createServerFn({ method: "POST" })
   from client-reachable code. Files named `*.server.ts` are build-enforced
   server-only (import-protection) — use that suffix for modules that must
   never leak, and plain names for server-function modules (e.g.
-  `session-fns.ts`).
+  `src/server/session-fns.ts`). See [api-layer.md](./api-layer.md) for the
+  server-function / REST / service layering.
 - Errors: throw types from `@rk-kit/errors`; convert unknowns with
   `handleUnknownError` when returning HTTP responses manually.
 

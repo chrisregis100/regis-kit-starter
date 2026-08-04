@@ -11,14 +11,12 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children, user, organizationId }: DashboardShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-muted/40">
       <Sidebar organizationId={organizationId} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar user={user} />
-        <main className="flex-1 overflow-y-auto px-6 py-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
       </div>
     </div>
   );

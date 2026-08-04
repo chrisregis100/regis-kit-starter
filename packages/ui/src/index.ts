@@ -78,3 +78,7 @@ export {
   SelectItem,
   SelectSeparator,
 } from "./components/Select.js";
+
+export { Skeleton } from "./components/Skeleton.js";
+export { Spinner, spinnerVariants } from "./components/Spinner.js";
+export { ThemeToggle } from "./components/ThemeToggle.js";

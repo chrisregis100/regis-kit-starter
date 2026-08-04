@@ -37,3 +37,6 @@ export type { Project, NewProject } from "./schema/index.js";
 
 // ── Schema bundle (convenience for Better Auth drizzleAdapter({ schema })) ────
 export * as schema from "./schema/index.js";
+
+// ── Query operators (single ORM boundary — services never import drizzle-orm) ─
+export { eq, ne, and, or, inArray, desc, asc, sql } from "drizzle-orm";

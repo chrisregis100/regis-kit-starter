@@ -8,7 +8,13 @@ working on this codebase. Read the relevant file **before** writing code:
 | [architecture.md](./architecture.md) | you need the big picture: workspace layout, layers, request flow |
 | [conventions.md](./conventions.md) | you add a route, component, service, or touch any file |
 | [data-access.md](./data-access.md) | you read/write business data (tenant isolation is mandatory) |
+| [api-layer.md](./api-layer.md) | you add or change a server function or REST endpoint |
 | [add-module.md](./add-module.md) | you add a new package/module to the monorepo |
+| **[frontend-design.md](./frontend-design.md)** | **you design or redesign any UI/landing page (most important visual reference)** |
+
+## Design-first note
+
+Read **[frontend-design.md](./frontend-design.md)** before touching any landing page, marketing UI, or public-facing component. It defines the project's design stance: distinctive, subject-grounded choices that avoid common AI-generated templates. It is the highest-priority reference for visual work in this repo.
 
 ## Ground rules (never violate)
 

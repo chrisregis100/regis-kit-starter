@@ -54,13 +54,13 @@ packages/config, packages/errors, packages/ui   (leaf utilities)
 ```
 Browser ──GET /dashboard──▶ Nitro/TanStack Start
   routes/_protected.tsx  beforeLoad
-    └─▶ getProtectedContext()          (server fn, src/lib/session-fns.ts)
+    └─▶ getProtectedContext()          (server fn, src/server/session-fns.ts)
           └─▶ getSession(headers)      (@rk-kit/auth → Better Auth)
                 ├─ no session          → redirect /login
                 ├─ no active org       → redirect /onboarding
                 └─ ok → { user, organizationId } into router context
   routes/_protected/dashboard.tsx  loader
-    └─▶ getDashboardData()             (server fn)
+    └─▶ listProjectsFn()               (server fn, src/server/projects-fns.ts)
           └─▶ requireOrganization(headers)
           └─▶ listProjects(orgId)      (src/services/project-service.ts)
                 └─▶ withTenant(orgId, tx => tx.select().from(project))

@@ -13,6 +13,11 @@
  * Types:
  *   AuthSession, SessionUser, SessionRecord
  */
-export { auth } from "./config.js";
+export { auth, enabledOAuthProviders } from "./config.js";
+export {
+  getEnabledOAuthProviders,
+  OAUTH_PROVIDER_IDS,
+  type OAuthProviderId,
+} from "./social-providers.js";
 export { getSession, requireSession, requireOrganization } from "./helpers.js";
 export type { AuthSession, SessionUser, SessionRecord } from "./types.js";

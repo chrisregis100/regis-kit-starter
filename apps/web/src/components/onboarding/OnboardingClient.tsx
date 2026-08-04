@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { Buildings, Handshake } from "@phosphor-icons/react";
 import {
   Button,
   Input,
@@ -9,8 +10,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  ThemeToggle,
 } from "@rk-kit/ui";
 import { authClient } from "../../lib/auth-client";
+import { Logo } from "../shared/Logo";
+import { cn } from "@rk-kit/ui";
 
 type Step = "choose" | "create" | "join";
 
@@ -19,12 +23,18 @@ export function OnboardingClient() {
   const [step, setStep] = useState<Step>("choose");
 
   return (
-    <div className="w-full max-w-md space-y-6">
+    <div className="relative w-full max-w-md space-y-6">
+      <div className="absolute -top-16 right-0">
+        <ThemeToggle />
+      </div>
+
+      <div className="flex justify-center">
+        <Logo />
+      </div>
+
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Set up your workspace
-        </h1>
-        <p className="mt-2 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">Set up your workspace</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           Create a new organization or join an existing one.
         </p>
       </div>
@@ -34,20 +44,26 @@ export function OnboardingClient() {
           <button
             type="button"
             onClick={() => setStep("create")}
-            className="flex flex-col gap-2 rounded-xl border-2 border-gray-200 bg-white p-5 text-left transition-colors hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className={cn(
+              "flex flex-col gap-2 rounded-xl border-2 border-border bg-card p-5 text-left transition-colors",
+              "hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            )}
           >
-            <span className="text-2xl" aria-hidden="true">🏢</span>
-            <span className="font-semibold text-gray-900">Create</span>
-            <span className="text-xs text-gray-500">Start a new organization</span>
+            <Buildings weight="duotone" className="h-7 w-7 text-primary" aria-hidden="true" />
+            <span className="font-semibold text-foreground">Create</span>
+            <span className="text-xs text-muted-foreground">Start a new organization</span>
           </button>
           <button
             type="button"
             onClick={() => setStep("join")}
-            className="flex flex-col gap-2 rounded-xl border-2 border-gray-200 bg-white p-5 text-left transition-colors hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className={cn(
+              "flex flex-col gap-2 rounded-xl border-2 border-border bg-card p-5 text-left transition-colors",
+              "hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            )}
           >
-            <span className="text-2xl" aria-hidden="true">🤝</span>
-            <span className="font-semibold text-gray-900">Join</span>
-            <span className="text-xs text-gray-500">Accept an invitation</span>
+            <Handshake weight="duotone" className="h-7 w-7 text-primary" aria-hidden="true" />
+            <span className="font-semibold text-foreground">Join</span>
+            <span className="text-xs text-muted-foreground">Accept an invitation</span>
           </button>
         </div>
       )}
@@ -97,7 +113,6 @@ function CreateOrgForm({
         setError(result.error?.message ?? "Failed to create organization.");
         return;
       }
-      // Set the new org as active so the dashboard guard lets us through
       await authClient.organization.setActive({
         organizationId: result.data.id,
       });
@@ -141,14 +156,14 @@ function CreateOrgForm({
               onChange={(e) => setSlug(e.target.value)}
               placeholder="acme-corp"
             />
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               app.example.com/
-              <span className="font-medium text-gray-600">{slug || "your-slug"}</span>
+              <span className="font-medium text-foreground">{slug || "your-slug"}</span>
             </p>
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-destructive">
               {error}
             </p>
           )}
@@ -160,9 +175,11 @@ function CreateOrgForm({
             <Button
               type="submit"
               className="flex-1"
-              disabled={isLoading || !name || !slug}
+              disabled={!name || !slug}
+              isLoading={isLoading}
+              loadingText="Creating…"
             >
-              {isLoading ? "Creating…" : "Create"}
+              Create
             </Button>
           </div>
         </form>
@@ -226,7 +243,7 @@ function JoinOrgForm({
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-destructive">
               {error}
             </p>
           )}
@@ -235,8 +252,14 @@ function JoinOrgForm({
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
               Back
             </Button>
-            <Button type="submit" className="flex-1" disabled={isLoading || !token}>
-              {isLoading ? "Joining…" : "Join"}
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={!token}
+              isLoading={isLoading}
+              loadingText="Joining…"
+            >
+              Join
             </Button>
           </div>
         </form>

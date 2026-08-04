@@ -53,13 +53,16 @@ pnpm dev                        # http://localhost:3000
 ## Repository layout
 
 ```
-apps/web          product app (TanStack Start) — customize freely
-packages/config   Zod-validated environment
-packages/db       Drizzle + migrations + RLS + withTenant
-packages/auth     Better Auth + session helpers
-packages/errors   typed error hierarchy + HTTP serialization
-packages/ui       shadcn-style primitives (Radix + CVA + Tailwind)
-docs/ai-skills    architecture, conventions, data access, add-module guide
+apps/web              product app (TanStack Start) — customize freely
+apps/web/src/services business logic (Drizzle via withTenant)
+apps/web/src/server   TanStack Start server functions (front RPC boundary)
+apps/web/src/api      REST handlers + middleware for /api/v1/*
+packages/config       Zod-validated environment
+packages/db           Drizzle + migrations + RLS + withTenant
+packages/auth         Better Auth + session helpers
+packages/errors       typed error hierarchy + HTTP serialization
+packages/ui           shadcn-style primitives (Radix + CVA + Tailwind)
+docs/ai-skills        architecture, conventions, data access, api layer, add-module guide
 ```
 
 Modules (Stripe, mobile money, Redis, monitoring, email, jobs, audit log) are

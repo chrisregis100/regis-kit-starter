@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet, HeadContent, Scripts } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "../styles/app.css?url";
+import { ThemeProvider } from "../components/shared/ThemeProvider";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,14 +19,16 @@ export const Route = createRootRoute({
 function RootDocument() {
   return (
     <Document>
-      <Outlet />
+      <ThemeProvider>
+        <Outlet />
+      </ThemeProvider>
     </Document>
   );
 }
 
 function Document({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

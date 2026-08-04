@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { DashboardShell } from "../components/dashboard/DashboardShell";
-import { getProtectedContext } from "../lib/session-fns";
+import { getProtectedContext } from "../server/session-fns";
 
 /**
  * Pathless layout guarding every dashboard route.

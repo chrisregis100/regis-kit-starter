@@ -21,6 +21,11 @@ import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dash
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedTeamRouteImport } from './routes/_protected/team'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiV1ProjectsRouteImport } from './routes/api/v1/projects'
+import { Route as ApiV1TeamRouteImport } from './routes/api/v1/team'
+import { Route as ApiV1ProjectsIdRouteImport } from './routes/api/v1/projects.$id'
+import { Route as ApiV1TeamInvitationsRouteImport } from './routes/api/v1/team.invitations'
+import { Route as ApiV1TeamMembersIdRouteImport } from './routes/api/v1/team.members.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -81,6 +86,31 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1ProjectsRoute = ApiV1ProjectsRouteImport.update({
+  id: '/api/v1/projects',
+  path: '/api/v1/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TeamRoute = ApiV1TeamRouteImport.update({
+  id: '/api/v1/team',
+  path: '/api/v1/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ProjectsIdRoute = ApiV1ProjectsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1ProjectsRoute,
+} as any)
+const ApiV1TeamInvitationsRoute = ApiV1TeamInvitationsRouteImport.update({
+  id: '/invitations',
+  path: '/invitations',
+  getParentRoute: () => ApiV1TeamRoute,
+} as any)
+const ApiV1TeamMembersIdRoute = ApiV1TeamMembersIdRouteImport.update({
+  id: '/members/$id',
+  path: '/members/$id',
+  getParentRoute: () => ApiV1TeamRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +124,11 @@ export interface FileRoutesByFullPath {
   '/settings': typeof ProtectedSettingsRoute
   '/team': typeof ProtectedTeamRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
+  '/api/v1/team': typeof ApiV1TeamRouteWithChildren
+  '/api/v1/projects/$id': typeof ApiV1ProjectsIdRoute
+  '/api/v1/team/invitations': typeof ApiV1TeamInvitationsRoute
+  '/api/v1/team/members/$id': typeof ApiV1TeamMembersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,6 +142,11 @@ export interface FileRoutesByTo {
   '/settings': typeof ProtectedSettingsRoute
   '/team': typeof ProtectedTeamRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
+  '/api/v1/team': typeof ApiV1TeamRouteWithChildren
+  '/api/v1/projects/$id': typeof ApiV1ProjectsIdRoute
+  '/api/v1/team/invitations': typeof ApiV1TeamInvitationsRoute
+  '/api/v1/team/members/$id': typeof ApiV1TeamMembersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,6 +162,11 @@ export interface FileRoutesById {
   '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/team': typeof ProtectedTeamRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
+  '/api/v1/team': typeof ApiV1TeamRouteWithChildren
+  '/api/v1/projects/$id': typeof ApiV1ProjectsIdRoute
+  '/api/v1/team/invitations': typeof ApiV1TeamInvitationsRoute
+  '/api/v1/team/members/$id': typeof ApiV1TeamMembersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +182,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/api/auth/$'
+    | '/api/v1/projects'
+    | '/api/v1/team'
+    | '/api/v1/projects/$id'
+    | '/api/v1/team/invitations'
+    | '/api/v1/team/members/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +200,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/api/auth/$'
+    | '/api/v1/projects'
+    | '/api/v1/team'
+    | '/api/v1/projects/$id'
+    | '/api/v1/team/invitations'
+    | '/api/v1/team/members/$id'
   id:
     | '__root__'
     | '/'
@@ -164,6 +219,11 @@ export interface FileRouteTypes {
     | '/_protected/settings'
     | '/_protected/team'
     | '/api/auth/$'
+    | '/api/v1/projects'
+    | '/api/v1/team'
+    | '/api/v1/projects/$id'
+    | '/api/v1/team/invitations'
+    | '/api/v1/team/members/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -175,6 +235,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiV1ProjectsRoute: typeof ApiV1ProjectsRouteWithChildren
+  ApiV1TeamRoute: typeof ApiV1TeamRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -263,6 +325,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/projects': {
+      id: '/api/v1/projects'
+      path: '/api/v1/projects'
+      fullPath: '/api/v1/projects'
+      preLoaderRoute: typeof ApiV1ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/team': {
+      id: '/api/v1/team'
+      path: '/api/v1/team'
+      fullPath: '/api/v1/team'
+      preLoaderRoute: typeof ApiV1TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/projects/$id': {
+      id: '/api/v1/projects/$id'
+      path: '/$id'
+      fullPath: '/api/v1/projects/$id'
+      preLoaderRoute: typeof ApiV1ProjectsIdRouteImport
+      parentRoute: typeof ApiV1ProjectsRoute
+    }
+    '/api/v1/team/invitations': {
+      id: '/api/v1/team/invitations'
+      path: '/invitations'
+      fullPath: '/api/v1/team/invitations'
+      preLoaderRoute: typeof ApiV1TeamInvitationsRouteImport
+      parentRoute: typeof ApiV1TeamRoute
+    }
+    '/api/v1/team/members/$id': {
+      id: '/api/v1/team/members/$id'
+      path: '/members/$id'
+      fullPath: '/api/v1/team/members/$id'
+      preLoaderRoute: typeof ApiV1TeamMembersIdRouteImport
+      parentRoute: typeof ApiV1TeamRoute
+    }
   }
 }
 
@@ -284,6 +381,32 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
   ProtectedRouteChildren,
 )
 
+interface ApiV1ProjectsRouteChildren {
+  ApiV1ProjectsIdRoute: typeof ApiV1ProjectsIdRoute
+}
+
+const ApiV1ProjectsRouteChildren: ApiV1ProjectsRouteChildren = {
+  ApiV1ProjectsIdRoute: ApiV1ProjectsIdRoute,
+}
+
+const ApiV1ProjectsRouteWithChildren = ApiV1ProjectsRoute._addFileChildren(
+  ApiV1ProjectsRouteChildren,
+)
+
+interface ApiV1TeamRouteChildren {
+  ApiV1TeamInvitationsRoute: typeof ApiV1TeamInvitationsRoute
+  ApiV1TeamMembersIdRoute: typeof ApiV1TeamMembersIdRoute
+}
+
+const ApiV1TeamRouteChildren: ApiV1TeamRouteChildren = {
+  ApiV1TeamInvitationsRoute: ApiV1TeamInvitationsRoute,
+  ApiV1TeamMembersIdRoute: ApiV1TeamMembersIdRoute,
+}
+
+const ApiV1TeamRouteWithChildren = ApiV1TeamRoute._addFileChildren(
+  ApiV1TeamRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
@@ -293,6 +416,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiV1ProjectsRoute: ApiV1ProjectsRouteWithChildren,
+  ApiV1TeamRoute: ApiV1TeamRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
