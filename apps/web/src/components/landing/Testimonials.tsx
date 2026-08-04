@@ -1,3 +1,5 @@
+import { Card } from "@rk-kit/ui";
+
 const testimonials = [
   {
     quote:
@@ -20,45 +22,60 @@ const testimonials = [
     role: "Founder at DataPulse",
     avatar: "MR",
   },
-];
+] as const;
 
 export function Testimonials() {
   return (
-    <section id="testimonials" className="bg-gray-50 py-20 sm:py-28">
+    <section id="testimonials" className="bg-muted/50 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Loved by builders
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="font-mono text-sm font-medium uppercase tracking-wider text-primary">
+            Testimonials
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Trusted by builders
           </h2>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="mt-4 text-lg text-muted-foreground">
             Real feedback from teams shipping with RK Kit.
           </p>
         </div>
 
         <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial) => (
-            <figure
+            <Card
               key={testimonial.author}
-              className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100"
+              className="relative border-border/60 bg-card p-6 shadow-sm"
             >
+              <div
+                className="absolute left-0 top-0 h-full w-1 rounded-l-lg bg-accent"
+                aria-hidden="true"
+              />
               <blockquote>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  &ldquo;{testimonial.quote}&rdquo;
+                <p className="relative text-base leading-relaxed text-foreground">
+                  <span
+                    className="absolute -left-1 -top-2 font-serif text-4xl leading-none text-accent/40"
+                    aria-hidden="true"
+                  >
+                    &ldquo;
+                  </span>
+                  {testimonial.quote}
                 </p>
               </blockquote>
-              <figcaption className="mt-4 flex items-center gap-3">
+              <figcaption className="mt-6 flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white"
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary font-mono text-sm font-bold text-primary-foreground"
                   aria-hidden="true"
                 >
                   {testimonial.avatar}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{testimonial.author}</p>
-                  <p className="text-xs text-gray-400">{testimonial.role}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {testimonial.author}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                 </div>
               </figcaption>
-            </figure>
+            </Card>
           ))}
         </div>
       </div>

@@ -1,7 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/start-client-core";
-import { getRequest } from "@tanstack/start/server";
 import { useState } from "react";
+import { UserCircle, UsersThree } from "@phosphor-icons/react";
 import {
   Button,
   Input,
@@ -14,83 +13,9 @@ import {
   Badge,
   Avatar,
   AvatarFallback,
+  Skeleton,
 } from "@rk-kit/ui";
-import { requireOrganization, auth } from "@rk-kit/auth";
-import { z } from "zod";
-
-const inviteSchema = z.object({
-  email: z.string().email("Must be a valid email address"),
-  role: z.enum(["member", "admin"]),
-});
-
-/** Enriched member shape returned by Better Auth's getFullOrganization */
-export interface OrgMember {
-  id: string;
-  organizationId: string;
-  userId: string;
-  role: string;
-  createdAt: Date;
-  user?: { name: string; email: string; image?: string | null } | null;
-}
-
-/** Invitation shape returned by Better Auth's getFullOrganization */
-export interface OrgInvitation {
-  id: string;
-  organizationId: string;
-  email: string;
-  role: string;
-  status: string;
-  expiresAt: Date;
-  inviterId: string;
-}
-
-const getTeamData = createServerFn().handler(async () => {
-  const request = getRequest();
-  const { organizationId } = await requireOrganization(request.headers);
-
-  const orgResult = await auth.api.getFullOrganization({
-    query: { organizationId },
-    headers: request.headers,
-  });
-
-  return {
-    organizationId,
-    members: (orgResult?.members ?? []) as OrgMember[],
-    invitations: (orgResult?.invitations ?? []) as OrgInvitation[],
-  };
-});
-
-const inviteMemberFn = createServerFn({ method: "POST" })
-  .validator(inviteSchema)
-  .handler(async (ctx) => {
-    const request = getRequest();
-    const { organizationId } = await requireOrganization(request.headers);
-
-    await auth.api.createInvitation({
-      body: {
-        organizationId,
-        email: ctx.data.email,
-        role: ctx.data.role,
-      },
-      headers: request.headers,
-    });
-
-    return { success: true };
-  });
-
-const removeMemberFn = createServerFn({ method: "POST" })
-  .validator(z.object({ memberId: z.string() }))
-  .handler(async (ctx) => {
-    const request = getRequest();
-    const { organizationId } = await requireOrganization(request.headers);
-
-    await auth.api.removeMember({
-      body: { organizationId, memberIdOrEmail: ctx.data.memberId },
-      headers: request.headers,
-    });
-
-    return { success: true };
-  });
+import { getTeamData, inviteMemberFn, removeMemberFn } from "../../server/team-fns";
 
 export const Route = createFileRoute("/_protected/team")({
   loader: () => getTeamData(),
@@ -137,13 +62,12 @@ function TeamPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Team</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">Team</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage members and invitations for this organization.
         </p>
       </div>
 
-      {/* Invite */}
       <Card>
         <CardHeader>
           <CardTitle>Invite a member</CardTitle>
@@ -151,12 +75,12 @@ function TeamPage() {
         </CardHeader>
         <CardContent>
           {error && (
-            <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div role="alert" className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
             </div>
           )}
           {success && (
-            <div role="status" className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+            <div role="status" className="mb-4 rounded-lg bg-success/10 px-4 py-3 text-sm text-success">
               {success}
             </div>
           )}
@@ -185,14 +109,13 @@ function TeamPage() {
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <Button type="submit" disabled={isInviting}>
-              {isInviting ? "Sending…" : "Send invite"}
+            <Button type="submit" isLoading={isInviting} loadingText="Sending…">
+              Send invite
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {/* Members list */}
       <Card>
         <CardHeader>
           <CardTitle>Members</CardTitle>
@@ -201,11 +124,13 @@ function TeamPage() {
         <CardContent className="p-0">
           {members.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <span className="text-3xl" aria-hidden="true">👥</span>
-              <p className="mt-3 text-sm text-gray-500">No members yet.</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <UsersThree weight="duotone" className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">No members yet.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100" role="list">
+            <ul className="divide-y divide-border" role="list">
               {members.map((member) => {
                 const displayName = member.user?.name ?? member.userId;
                 const initials = displayName
@@ -221,12 +146,8 @@ function TeamPage() {
                       <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-900">
-                        {displayName}
-                      </p>
-                      <p className="truncate text-xs text-gray-400">
-                        {member.user?.email}
-                      </p>
+                      <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                      <p className="truncate text-xs text-muted-foreground">{member.user?.email}</p>
                     </div>
                     <Badge variant={member.role === "admin" ? "default" : "secondary"}>
                       {member.role}
@@ -235,7 +156,7 @@ function TeamPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveMember(member.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       aria-label={`Remove ${displayName}`}
                     >
                       Remove
@@ -248,7 +169,6 @@ function TeamPage() {
         </CardContent>
       </Card>
 
-      {/* Pending invitations */}
       {invitations.length > 0 && (
         <Card>
           <CardHeader>
@@ -256,15 +176,15 @@ function TeamPage() {
             <CardDescription>{invitations.length} pending</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <ul className="divide-y divide-gray-100" role="list">
+            <ul className="divide-y divide-border" role="list">
               {invitations.map((inv) => (
                 <li key={inv.id} className="flex items-center gap-4 px-5 py-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed border-gray-300">
-                    <span className="text-xs text-gray-400" aria-hidden="true">?</span>
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted">
+                    <UserCircle weight="duotone" className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-700">{inv.email}</p>
-                    <p className="text-xs text-gray-400">Invitation pending</p>
+                    <p className="truncate text-sm font-medium text-foreground">{inv.email}</p>
+                    <p className="text-xs text-muted-foreground">Invitation pending</p>
                   </div>
                   <Badge variant="secondary">{inv.role}</Badge>
                 </li>
@@ -274,17 +194,20 @@ function TeamPage() {
         </Card>
       )}
 
-      <p className="text-xs text-gray-300">org: {organizationId}</p>
+      <p className="text-xs text-muted-foreground/50">org: {organizationId}</p>
     </div>
   );
 }
 
 function TeamSkeleton() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-pulse">
-      <div className="h-8 w-24 rounded-lg bg-gray-200" />
-      <div className="h-40 rounded-xl bg-gray-200" />
-      <div className="h-64 rounded-xl bg-gray-200" />
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      <Skeleton className="h-40 rounded-xl" />
+      <Skeleton className="h-64 rounded-xl" />
     </div>
   );
 }

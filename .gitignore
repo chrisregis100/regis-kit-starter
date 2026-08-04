@@ -9,6 +9,8 @@ build/
 .next/
 out/
 .vinxi/
+.output/
+.nitro/
 
 # Turbo cache
 .turbo/
@@ -30,8 +32,12 @@ Thumbs.db
 # Editor directories
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
+
+# Git
+.git/
 
 # TypeScript
 *.tsbuildinfo

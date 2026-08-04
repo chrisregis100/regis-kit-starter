@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/.output
+**/.nitro
+**/dist
+**/.turbo
+.git
+.env
+.env.*
+!.env.example
+**/coverage
+**/*.log

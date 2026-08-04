@@ -1,7 +1,18 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@rk-kit/ui";
+import {
+  Button,
+  Input,
+  Label,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@rk-kit/ui";
 import { authClient } from "../lib/auth-client";
+import { AuthLayout } from "../components/shared/AuthLayout";
 
 export const Route = createFileRoute("/reset-password")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -50,73 +61,62 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600">
-              <span className="text-sm font-bold text-white">RK</span>
+    <AuthLayout>
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle>Set new password</CardTitle>
+          <CardDescription>Choose a strong password for your account.</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {error && (
+            <div role="alert" className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
             </div>
-            <span className="text-xl font-semibold text-gray-900">RK Kit</span>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="password">New password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                autoFocus
+                minLength={8}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Repeat your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                minLength={8}
+              />
+            </div>
+
+            <Button type="submit" className="w-full" isLoading={isLoading} loadingText="Updating…">
+              Update password
+            </Button>
+          </form>
+        </CardContent>
+
+        <CardFooter className="justify-center">
+          <Link to="/login" className="text-sm text-primary transition-colors hover:text-primary/80">
+            Back to sign in
           </Link>
-        </div>
-
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Set new password</CardTitle>
-            <CardDescription>Choose a strong password for your account.</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {error && (
-              <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="password">New password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="At least 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="new-password"
-                  autoFocus
-                  minLength={8}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Repeat your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  autoComplete="new-password"
-                  minLength={8}
-                />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Updating…" : "Update password"}
-              </Button>
-            </form>
-          </CardContent>
-
-          <CardFooter className="justify-center">
-            <Link to="/login" className="text-sm text-blue-600 hover:text-blue-700 transition-colors">
-              Back to sign in
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+        </CardFooter>
+      </Card>
+    </AuthLayout>
   );
 }

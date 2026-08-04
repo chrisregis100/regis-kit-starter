@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { Check } from "@phosphor-icons/react";
+import { Button, Card, cn } from "@rk-kit/ui";
 
 const plans = [
   {
@@ -50,65 +52,75 @@ const plans = [
     href: "/signup" as const,
     highlighted: false,
   },
-];
+] as const;
 
 export function Pricing() {
   return (
-    <section id="pricing" className="bg-white py-20 sm:py-28">
+    <section id="pricing" className="bg-background py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Simple, transparent pricing
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="font-mono text-sm font-medium uppercase tracking-wider text-primary">
+            Pricing
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Start free. Scale as you grow.
           </h2>
-          <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
-            Start free. Upgrade when you need to.
+          <p className="mt-4 text-lg text-muted-foreground">
+            No hidden fees. Upgrade when you are ready.
           </p>
         </div>
 
         <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => (
-            <div
+            <Card
               key={plan.name}
-              className={[
-                "rounded-2xl p-8 ring-1",
+              className={cn(
+                "relative overflow-hidden p-8 ring-1 transition-shadow hover:shadow-lg",
                 plan.highlighted
-                  ? "bg-blue-600 ring-blue-600 shadow-2xl shadow-blue-200"
-                  : "bg-white ring-gray-200",
-              ].join(" ")}
+                  ? "border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/15 ring-primary"
+                  : "border-border/60 bg-card text-card-foreground ring-border",
+              )}
             >
+              {plan.highlighted && (
+                <div className="absolute right-0 top-0 rounded-bl-lg bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
+                  Popular
+                </div>
+              )}
+
               <h3
-                className={[
+                className={cn(
                   "text-base font-semibold",
-                  plan.highlighted ? "text-blue-100" : "text-gray-500",
-                ].join(" ")}
+                  plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground",
+                )}
               >
                 {plan.name}
               </h3>
+
               <div className="mt-4 flex items-baseline gap-1">
-                <span
-                  className={[
-                    "text-4xl font-bold tracking-tight",
-                    plan.highlighted ? "text-white" : "text-gray-900",
-                  ].join(" ")}
-                >
+                <span className="font-mono text-4xl font-bold tracking-tight">
                   {plan.price}
                 </span>
                 {plan.period && (
                   <span
-                    className={[
+                    className={cn(
                       "text-sm",
-                      plan.highlighted ? "text-blue-200" : "text-gray-400",
-                    ].join(" ")}
+                      plan.highlighted
+                        ? "text-primary-foreground/70"
+                        : "text-muted-foreground",
+                    )}
                   >
                     {plan.period}
                   </span>
                 )}
               </div>
+
               <p
-                className={[
+                className={cn(
                   "mt-4 text-sm",
-                  plan.highlighted ? "text-blue-100" : "text-gray-500",
-                ].join(" ")}
+                  plan.highlighted
+                    ? "text-primary-foreground/80"
+                    : "text-muted-foreground",
+                )}
               >
                 {plan.description}
               </p>
@@ -116,45 +128,31 @@ export function Pricing() {
               <ul className="mt-6 space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-3">
-                    <svg
-                      className={[
+                    <Check
+                      weight="bold"
+                      className={cn(
                         "h-4 w-4 flex-shrink-0",
-                        plan.highlighted ? "text-blue-200" : "text-blue-600",
-                      ].join(" ")}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+                        plan.highlighted ? "text-primary-foreground/80" : "text-primary",
+                      )}
                       aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span
-                      className={[
-                        "text-sm",
-                        plan.highlighted ? "text-white" : "text-gray-600",
-                      ].join(" ")}
-                    >
-                      {feature}
-                    </span>
+                    />
+                    <span className="text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <Link
-                to={plan.href}
-                className={[
-                  "mt-8 block w-full rounded-xl px-4 py-3 text-center text-sm font-semibold transition-all",
-                  plan.highlighted
-                    ? "bg-white text-blue-600 hover:bg-blue-50"
-                    : "bg-blue-600 text-white hover:bg-blue-700",
-                ].join(" ")}
+              <Button
+                asChild
+                variant={plan.highlighted ? "secondary" : "default"}
+                className={cn(
+                  "mt-8 w-full rounded-lg",
+                  plan.highlighted &&
+                    "bg-primary-foreground text-primary hover:bg-primary-foreground/90",
+                )}
               >
-                {plan.cta}
-              </Link>
-            </div>
+                <Link to={plan.href}>{plan.cta}</Link>
+              </Button>
+            </Card>
           ))}
         </div>
       </div>

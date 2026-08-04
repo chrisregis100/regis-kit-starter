@@ -1,6 +1,16 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { Button, Input, Label, Card, CardHeader, CardTitle, CardDescription, CardContent, Separator } from "@rk-kit/ui";
+import {
+  Button,
+  Input,
+  Label,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  Separator,
+} from "@rk-kit/ui";
 import { authClient } from "../../lib/auth-client";
 
 export const Route = createFileRoute("/_protected/settings")({
@@ -37,11 +47,10 @@ function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your account preferences.</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Manage your account preferences.</p>
       </div>
 
-      {/* Profile */}
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
@@ -51,12 +60,11 @@ function SettingsPage() {
           {message && (
             <div
               role="alert"
-              className={[
-                "mb-4 rounded-lg px-4 py-3 text-sm",
+              className={
                 message.type === "success"
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-600",
-              ].join(" ")}
+                  ? "mb-4 rounded-lg bg-success/10 px-4 py-3 text-sm text-success"
+                  : "mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              }
             >
               {message.text}
             </div>
@@ -82,13 +90,13 @@ function SettingsPage() {
                 type="email"
                 value={ctx.user.email}
                 disabled
-                className="bg-gray-50 text-gray-500"
+                className="bg-muted text-muted-foreground"
               />
-              <p className="text-xs text-gray-400">Email cannot be changed.</p>
+              <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
             </div>
 
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving…" : "Save changes"}
+            <Button type="submit" isLoading={isSaving} loadingText="Saving…">
+              Save changes
             </Button>
           </form>
         </CardContent>
@@ -96,14 +104,13 @@ function SettingsPage() {
 
       <Separator />
 
-      {/* Danger zone */}
-      <Card className="border-red-200">
+      <Card className="border-destructive/30">
         <CardHeader>
-          <CardTitle className="text-red-700">Danger zone</CardTitle>
+          <CardTitle className="text-destructive">Danger zone</CardTitle>
           <CardDescription>Irreversible actions for your account.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Account deletion is not yet implemented in this version.
             Contact support if you need to delete your account.
           </p>
