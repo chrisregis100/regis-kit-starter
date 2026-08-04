@@ -2,13 +2,41 @@
   "name": "create-rk-kit",
   "version": "0.0.1",
   "description": "CLI installer for the RK Kit SaaS boilerplate",
+  "homepage": "https://github.com/rk-kit/regis-kit-starter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rk-kit/regis-kit-starter.git",
+    "directory": "packages/create-rk-kit"
+  },
+  "bugs": {
+    "url": "https://github.com/rk-kit/regis-kit-starter/issues"
+  },
+  "keywords": [
+    "rk-kit",
+    "saas",
+    "boilerplate",
+    "starter",
+    "scaffold",
+    "cli",
+    "tanstack",
+    "better-auth",
+    "drizzle",
+    "postgresql",
+    "multi-tenant",
+    "typescript"
+  ],
+  "author": "Régis KIKI <erneregis@gmail.com>",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "bin": {
     "create-rk-kit": "./bin/create-rk-kit.mjs"
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc --noEmit false",

@@ -1,64 +1,111 @@
-# RK Kit — SaaS Boilerplate Monorepo
+# RK Kit — Ship your SaaS in days, not months
 
-Modular open-source SaaS starter: authentication, premium landing page,
-multi-tenant dashboard and senior-grade architecture out of the box.
+[![Version](https://img.shields.io/npm/v/create-rk-kit)](https://www.npmjs.com/package/create-rk-kit)
+[![License](https://img.shields.io/github/license/rk-kit/regis-kit-starter)](LICENSE)
+![Node](https://img.shields.io/badge/node-%3E%3D22-339933)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6)
 
-**Stack**: TanStack Start · Better Auth · PostgreSQL/Supabase (Drizzle + RLS) ·
-Tailwind v4 · pnpm workspaces + Turborepo · Docker
+A production-ready, open-source SaaS starter for teams that want to stop rebuilding auth, billing, and tenant isolation from scratch. Authentication, landing page, multi-tenant dashboard, database, and deployment plumbing — all wired together and ready to customize.
+
+```bash
+npx create-rk-kit@latest my-saas
+```
+
+**[Documentation](#table-of-contents) · [Quick Start](#quick-start) · [Live Demo](#live-demo)**
+
+---
+
+## Why RK Kit?
+
+Most SaaS projects waste the first two weeks on the same boilerplate: auth flow, database setup, team invites, landing page, and Docker config. RK Kit ships all of that on day one so you can focus on your product.
+
+- **Start fast**: one CLI command scaffolds the full monorepo and configures the environment.
+- **Stay secure**: PostgreSQL Row-Level Security enforces tenant isolation at the database level.
+- **Scale cleanly**: packages are split by concern (auth, db, config, errors, UI) inside a pnpm + Turborepo workspace.
+- **Deploy anywhere**: builds to a self-contained Docker image compatible with Render, Railway, Fly.io, or any VPS.
+
+## What’s included
+
+| Feature | Details |
+|---|---|
+| **Authentication** | Email/password, Google & GitHub OAuth, password reset, sessions, organizations, and role-based access via [Better Auth](https://www.better-auth.com/). |
+| **Multi-tenancy** | Organizations with invites, member roles, and PostgreSQL RLS enforced on every business table. |
+| **Landing page** | Hero, features, pricing, testimonials, and footer — fully editable React components. |
+| **Dashboard shell** | Navigation, team management, settings, and billing placeholder — protected server-side. |
+| **Database** | PostgreSQL, [Drizzle ORM](https://orm.drizzle.team/), migrations, and RLS policies. |
+| **UI primitives** | [Radix UI](https://www.radix-ui.com/) + [Tailwind CSS v4](https://tailwindcss.com/) + [CVA](https://cva.style/) components. |
+| **Quality gates** | TypeScript, lint, Vitest tests, RLS integration tests, smoke test, and CI. |
+| **Deployment** | Dockerfile, Docker Compose, and platform-specific deployment notes. |
+| **AI agent handbook** | Conventions and architecture docs in `docs/ai-skills` to onboard AI assistants quickly. |
+
+## Stack
+
+- **Framework**: [TanStack Start](https://tanstack.com/start/)
+- **Auth**: [Better Auth](https://www.better-auth.com/)
+- **Database**: PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/) + RLS
+- **Styling**: Tailwind CSS v4 + Radix UI
+- **Workspace**: pnpm workspaces + [Turborepo](https://turbo.build/)
+- **Runtime**: Node.js >= 22
+
+## Quick start
+
+```bash
+# Scaffold a new project
+npx create-rk-kit@latest my-saas
+
+# Or with pnpm
+pnpm dlx create-rk-kit@latest my-saas
+```
+
+The CLI asks for your project name, database credentials, and optional OAuth providers, then installs dependencies, starts PostgreSQL, and applies migrations automatically.
+
+```bash
+cd my-saas
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Live demo
+
+A hosted demo is coming soon. Until then, run the installer locally to see the landing page and dashboard in under five minutes.
 
 ## Table of contents
 
-1. [What's included](#whats-included)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-   - [Package installer (recommended)](#package-installer-recommended)
+1. [Prerequisites](#prerequisites)
+2. [Installation](#installation)
+   - [CLI installer (recommended)](#cli-installer-recommended)
    - [Manual install](#manual-install)
-4. [Configuration guide](#configuration-guide)
-5. [Database setup](#database-setup)
-6. [Development workflow](#development-workflow)
-7. [Testing & quality gates](#testing--quality-gates)
-8. [Deployment](#deployment)
-9. [Troubleshooting](#troubleshooting)
-10. [Project architecture](#project-architecture)
-
-## What's included
-
-- **Auth**: email/password, Google OAuth, password reset, sessions,
-  organizations (multi-tenant) — via Better Auth
-- **Tenant isolation**: PostgreSQL Row-Level Security enforced on every
-  business table, on top of application-level checks (`withTenant`)
-- **Landing page**: hero, features, pricing, testimonials, footer — lives in
-  the app, edit it directly
-- **Dashboard shell**: navigation, team management (invites/roles), settings,
-  billing placeholder — behind a server-side auth + organization guard
-- **Infrastructure packages**: validated env (`@rk-kit/config`), typed errors
-  (`@rk-kit/errors`), database + migrations (`@rk-kit/db`), auth helpers
-  (`@rk-kit/auth`), UI primitives (`@rk-kit/ui`)
-- **Quality gates**: unit + RLS integration tests, smoke test, CI, Dockerfile
-- **AI-agent docs**: [`docs/ai-skills/`](docs/ai-skills/README.md) — the
-  handbook AI agents (and humans) read before contributing
+3. [Configuration guide](#configuration-guide)
+4. [Database setup](#database-setup)
+5. [Development workflow](#development-workflow)
+6. [Testing & quality gates](#testing--quality-gates)
+7. [Deployment](#deployment)
+8. [Troubleshooting](#troubleshooting)
+9. [Project architecture](#project-architecture)
+10. [Package installer development](#package-installer-development)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ## Prerequisites
 
 - **Node.js** `>= 22` (LTS recommended)
-- **pnpm** `>= 10.29.3` — enabled via Corepack:
+- **pnpm** `>= 10.29.3` — enable via Corepack:
   ```bash
   corepack enable
   corepack prepare pnpm@10.29.3 --activate
   ```
 - **Docker** + **Docker Compose** v2 (for PostgreSQL)
-- **Git** (for cloning or the package installer)
+- **Git**
 - **OpenSSL** (for generating `BETTER_AUTH_SECRET` locally)
 
-> All commands below are run from the repository root unless stated otherwise.
+All commands below are run from the repository root unless stated otherwise.
 
 ## Installation
 
-### Package installer (recommended)
+### CLI installer (recommended)
 
-The `create-rk-kit` CLI scaffolds a new project and runs the interactive
-configuration wizard so every environment value is set before the server
-starts.
+The `create-rk-kit` CLI scaffolds a new project and runs an interactive configuration wizard so every environment value is set before the server starts.
 
 ```bash
 # npm
@@ -76,7 +123,7 @@ The installer performs the following steps automatically:
 1. Copies the RK Kit monorepo template into a new directory (`my-saas`).
 2. Asks for the project name, database name, and database credentials.
 3. Generates a secure `BETTER_AUTH_SECRET`.
-4. Optionally configures one or more OAuth providers.
+4. Optionally configures Google and GitHub OAuth.
 5. Writes a ready-to-use `.env` file.
 6. Runs `pnpm install` and builds the shared packages.
 7. Starts PostgreSQL via Docker Compose and applies migrations.
@@ -89,9 +136,7 @@ cd my-saas
 pnpm dev              # http://localhost:3000
 ```
 
-> The CLI uses the GitHub repository `rk-kit/regis-kit-starter` by default. If
-> you are working from a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO`
-> environment variable before running the installer:
+> The CLI uses the GitHub repository `rk-kit/regis-kit-starter` by default. If you are working from a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable before running the installer:
 >
 > ```bash
 > RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
@@ -129,15 +174,13 @@ pnpm dev              # http://localhost:3000
 
 ## Configuration guide
 
-Environment variables are loaded from the monorepo root `.env` file and
-validated by `@rk-kit/config`. The app fails fast at startup if a required
-variable is missing or malformed.
+Environment variables are loaded from the monorepo root `.env` file and validated by `@rk-kit/config`. The app fails fast at startup if a required variable is missing or malformed.
 
 ### Required variables
 
-| Variable | Purpose | How to set |
+| Variable | Purpose | Format |
 |---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string used by Drizzle and Better Auth | `postgresql://<user>:<password>@<host>:<port>/<db>` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://<user>:<password>@<host>:<port>/<db>` |
 | `BETTER_AUTH_SECRET` | Signing secret for sessions and tokens | `openssl rand -base64 32` (min 32 chars) |
 | `BETTER_AUTH_URL` | Public base URL of the app | `http://localhost:3000` for local dev |
 | `PORT` | HTTP port the dev server listens on | `3000` (default) |
@@ -161,8 +204,7 @@ DATABASE_URL=postgresql://rk_kit:rk_kit_secret@localhost:5432/rk_kit_dev
 
 ### OAuth providers (optional)
 
-Leave a provider blank to disable it. Only configured providers appear on the
-login and signup pages. The callback URL pattern is always:
+Leave a provider blank to disable it. Only configured providers appear on the login and signup pages. The callback URL pattern is always:
 
 ```
 {BETTER_AUTH_URL}/api/auth/callback/{provider}
@@ -184,13 +226,11 @@ http://localhost:3000/api/auth/callback/google
 | Discord | [Discord Developer Portal](https://discord.com/developers/applications) | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` |
 | LinkedIn | [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps) | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` |
 
-> Apple Sign-In does **not** support `http://localhost` callbacks. Use a
-> tunnel such as `ngrok` or configure it only for production.
+> Apple Sign-In does **not** support `http://localhost` callbacks. Use a tunnel such as `ngrok` or configure it only for production.
 
 ### Docker production variables
 
-When running the full production image via `docker compose --profile app up`,
-Compose injects the following defaults if they are not set:
+When running the full production image via `docker compose --profile app up`, Compose injects the following defaults if they are not set:
 
 ```bash
 DATABASE_URL_DOCKER=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -203,8 +243,7 @@ You can override any of them in `.env`.
 
 ## Database setup
 
-RK Kit uses **Drizzle ORM** for schema management and **PostgreSQL Row-Level
-Security (RLS)** for tenant isolation.
+RK Kit uses **Drizzle ORM** for schema management and **PostgreSQL Row-Level Security (RLS)** for tenant isolation.
 
 ### Start PostgreSQL
 
@@ -231,10 +270,7 @@ pnpm --filter @rk-kit/db db:generate
 pnpm --filter @rk-kit/db db:studio
 ```
 
-> ⚠️ **RLS note**: the runtime `DATABASE_URL` should connect as the restricted
-> `app_user` role (created by the RLS migration), not as the postgres
-> superuser — superusers bypass row-level security. See
-> [docs/ai-skills/data-access.md](docs/ai-skills/data-access.md).
+> ⚠️ **RLS note**: the runtime `DATABASE_URL` should connect as the restricted `app_user` role (created by the RLS migration), not as the postgres superuser — superusers bypass row-level security. See [docs/ai-skills/data-access.md](docs/ai-skills/data-access.md).
 
 ## Development workflow
 
@@ -277,9 +313,7 @@ bash scripts/check-ai-docs.sh
 
 ## Deployment
 
-The web app builds to a self-contained Nitro bundle
-(`node .output/server/index.mjs`) binding `0.0.0.0:$PORT` — compatible with
-Render, Railway, Fly.io or any Docker host.
+The web app builds to a self-contained Nitro bundle (`node .output/server/index.mjs`) binding `0.0.0.0:$PORT` — compatible with Render, Railway, Fly.io, or any Docker host.
 
 ### Docker (recommended for self-hosting)
 
@@ -287,18 +321,13 @@ Render, Railway, Fly.io or any Docker host.
 docker compose --profile app up --build
 ```
 
-The production image is defined in [`apps/web/Dockerfile`](apps/web/Dockerfile).
-Secrets are injected at runtime; dummy values are used only during the build
-step so the image stays portable.
+The production image is defined in [`apps/web/Dockerfile`](apps/web/Dockerfile). Secrets are injected at runtime; dummy values are used only during the build step so the image stays portable.
 
 ### Platform-specific notes
 
-- **Render**: set `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` as
-  environment variables. Render provides `PORT` automatically.
-- **Railway / Fly.io**: same variables; bind to `0.0.0.0` and read `PORT` from
-  the environment.
-- **VPS**: build the image, run the container, and point a reverse proxy at
-  `http://127.0.0.1:3000`.
+- **Render**: set `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` as environment variables. Render provides `PORT` automatically.
+- **Railway / Fly.io**: same variables; bind to `0.0.0.0` and read `PORT` from the environment.
+- **VPS**: build the image, run the container, and point a reverse proxy at `http://127.0.0.1:3000`.
 
 ### Deploy checklist
 
@@ -313,18 +342,14 @@ step so the image stays portable.
 
 ### `❌ Invalid server environment variables`
 
-`@rk-kit/config` validates the environment at startup. Make sure `.env` exists
-at the repository root and contains all required variables. Copy from
-`.env.example` and fill in the blanks.
+`@rk-kit/config` validates the environment at startup. Make sure `.env` exists at the repository root and contains all required variables. Copy from `.env.example` and fill in the blanks.
 
 ### Database connection errors
 
 1. Verify PostgreSQL is running: `docker compose ps`
 2. Verify `DATABASE_URL` matches `POSTGRES_*` values in `.env`
 3. Check the database is reachable: `pg_isready -h localhost -p 5432`
-4. If you changed `POSTGRES_*` after the first `docker compose up`, the volume
-   still contains the old credentials. Either update `DATABASE_URL` or prune the
-   volume (`docker compose down -v` — this destroys data).
+4. If you changed `POSTGRES_*` after the first `docker compose up`, the volume still contains the old credentials. Either update `DATABASE_URL` or prune the volume (`docker compose down -v` — this destroys data).
 
 ### Migrations fail
 
@@ -336,10 +361,8 @@ pnpm --filter @rk-kit/db db:migrate
 
 ### OAuth redirects fail locally
 
-- The callback must match exactly: trailing slashes, `http` vs `https`, and
-  port all matter.
-- Apple Sign-In requires HTTPS even in development. Use `ngrok http 3000` and
-  update `BETTER_AUTH_URL` and the Apple callback URL accordingly.
+- The callback must match exactly: trailing slashes, `http` vs `https`, and port all matter.
+- Apple Sign-In requires HTTPS even in development. Use `ngrok http 3000` and update `BETTER_AUTH_URL` and the Apple callback URL accordingly.
 
 ### Smoke test fails
 
@@ -351,10 +374,27 @@ pnpm --filter @rk-kit/db db:migrate
 bash scripts/smoke.sh
 ```
 
+## Project architecture
+
+```
+apps/web                  product app (TanStack Start) — customize freely
+apps/web/src/services     business logic (Drizzle via withTenant)
+apps/web/src/server       TanStack Start server functions (front RPC boundary)
+apps/web/src/api          REST handlers + middleware for /api/v1/*
+packages/config           Zod-validated environment
+packages/db               Drizzle + migrations + RLS + withTenant
+packages/auth             Better Auth + session helpers
+packages/errors           typed error hierarchy + HTTP serialization
+packages/ui               shadcn-style primitives (Radix + CVA + Tailwind)
+packages/create-rk-kit    interactive CLI installer for new projects
+docs/ai-skills            architecture, conventions, data access, API layer, add-module guide
+```
+
+Modules (Stripe, mobile money, Redis, monitoring, email, jobs, audit log) are added **only on a real trigger** — see [docs/ai-skills/add-module.md](docs/ai-skills/add-module.md).
+
 ## Package installer development
 
-The `create-rk-kit` CLI lives in `packages/create-rk-kit` and uses only Node.js
-built-in modules so it can be published to npm without heavy dependencies.
+The `create-rk-kit` CLI lives in `packages/create-rk-kit` and uses only Node.js built-in modules so it can be published to npm without heavy dependencies.
 
 Build and test it from the monorepo:
 
@@ -369,33 +409,19 @@ To publish it to npm:
 pnpm --filter create-rk-kit publish
 ```
 
-Set `RK_KIT_TEMPLATE_REPO=your-org/your-repo` if the template is hosted on a
-fork or private repository.
+Set `RK_KIT_TEMPLATE_REPO=your-org/your-repo` if the template is hosted on a fork or private repository.
 
-## Project architecture
+## Contributing
 
-```
-apps/web              product app (TanStack Start) — customize freely
-apps/web/src/services business logic (Drizzle via withTenant)
-apps/web/src/server   TanStack Start server functions (front RPC boundary)
-apps/web/src/api      REST handlers + middleware for /api/v1/*
-packages/config       Zod-validated environment
-packages/db           Drizzle + migrations + RLS + withTenant
-packages/auth         Better Auth + session helpers
-packages/errors       typed error hierarchy + HTTP serialization
-packages/ui           shadcn-style primitives (Radix + CVA + Tailwind)
-packages/create-rk-kit  interactive CLI installer for new projects
-docs/ai-skills        architecture, conventions, data access, api layer, add-module guide
-```
+Contributions are welcome. Please read the [AI-agent handbook](docs/ai-skills/README.md) before making structural changes, and run the full quality gate before opening a pull request.
 
-Modules (Stripe, mobile money, Redis, monitoring, email, jobs, audit log) are
-added **only on a real trigger** — see
-[docs/ai-skills/add-module.md](docs/ai-skills/add-module.md).
+## License
+
+[MIT](LICENSE) © Régis KIKI
 
 ## Next steps
 
 1. Run the project locally with `pnpm dev`.
 2. Customize the landing page in `apps/web/src/components/landing/`.
 3. Add your first business domain in `apps/web/src/services/`.
-4. Read the [AI-agent handbook](docs/ai-skills/README.md) before making
-   structural changes.
+4. Read the [AI-agent handbook](docs/ai-skills/README.md) before making structural changes.
