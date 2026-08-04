@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/start-client-core";
-import { getRequest } from "@tanstack/start/server";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { useState } from "react";
 import {
   Button,
@@ -15,79 +15,42 @@ import {
   Avatar,
   AvatarFallback,
 } from "@rk-kit/ui";
-import { requireOrganization, auth } from "@rk-kit/auth";
-import { z } from "zod";
+import { requireOrganization } from "@rk-kit/auth";
+import {
+  getTeam,
+  inviteMember,
+  removeMember,
+  inviteMemberSchema,
+  removeMemberSchema,
+} from "../../services/team-service";
 
-const inviteSchema = z.object({
-  email: z.string().email("Must be a valid email address"),
-  role: z.enum(["member", "admin"]),
-});
-
-/** Enriched member shape returned by Better Auth's getFullOrganization */
-export interface OrgMember {
-  id: string;
-  organizationId: string;
-  userId: string;
-  role: string;
-  createdAt: Date;
-  user?: { name: string; email: string; image?: string | null } | null;
-}
-
-/** Invitation shape returned by Better Auth's getFullOrganization */
-export interface OrgInvitation {
-  id: string;
-  organizationId: string;
-  email: string;
-  role: string;
-  status: string;
-  expiresAt: Date;
-  inviterId: string;
-}
-
-const getTeamData = createServerFn().handler(async () => {
+const getTeamData = createServerFn({ method: "GET" }).handler(async () => {
   const request = getRequest();
   const { organizationId } = await requireOrganization(request.headers);
 
-  const orgResult = await auth.api.getFullOrganization({
-    query: { organizationId },
-    headers: request.headers,
-  });
+  const team = await getTeam(organizationId, request.headers);
 
-  return {
-    organizationId,
-    members: (orgResult?.members ?? []) as OrgMember[],
-    invitations: (orgResult?.invitations ?? []) as OrgInvitation[],
-  };
+  return { organizationId, ...team };
 });
 
 const inviteMemberFn = createServerFn({ method: "POST" })
-  .validator(inviteSchema)
+  .validator(inviteMemberSchema)
   .handler(async (ctx) => {
     const request = getRequest();
     const { organizationId } = await requireOrganization(request.headers);
 
-    await auth.api.createInvitation({
-      body: {
-        organizationId,
-        email: ctx.data.email,
-        role: ctx.data.role,
-      },
-      headers: request.headers,
-    });
+    await inviteMember(organizationId, request.headers, ctx.data);
 
     return { success: true };
   });
 
 const removeMemberFn = createServerFn({ method: "POST" })
-  .validator(z.object({ memberId: z.string() }))
+  .validator(removeMemberSchema)
   .handler(async (ctx) => {
     const request = getRequest();
     const { organizationId } = await requireOrganization(request.headers);
 
-    await auth.api.removeMember({
-      body: { organizationId, memberIdOrEmail: ctx.data.memberId },
-      headers: request.headers,
-    });
+    await removeMember(organizationId, request.headers, ctx.data);
 
     return { success: true };
   });

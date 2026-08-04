@@ -1,17 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/start-client-core";
-import { getRequest } from "@tanstack/start/server";
-import { withTenant, project } from "@rk-kit/db";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireOrganization } from "@rk-kit/auth";
 import type { Project } from "@rk-kit/db";
+import { listProjects } from "../../services/project-service";
 
-const getDashboardData = createServerFn().handler(async () => {
+const getDashboardData = createServerFn({ method: "GET" }).handler(async () => {
   const request = getRequest();
   const { organizationId } = await requireOrganization(request.headers);
 
-  const projects = await withTenant(organizationId, (tx) =>
-    tx.select().from(project).limit(10),
-  );
+  const projects = await listProjects(organizationId);
 
   return { projects, organizationId };
 });

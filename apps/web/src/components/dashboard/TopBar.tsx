@@ -62,7 +62,7 @@ export function TopBar({ user }: TopBarProps) {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <a href="/_protected/settings" className="cursor-pointer">Settings</a>
+            <a href="/settings" className="cursor-pointer">Settings</a>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

@@ -1,6 +1,6 @@
-import { createRootRoute, Outlet, ScrollRestoration, HeadContent, Scripts } from "@tanstack/react-router";
+import { createRootRoute, Outlet, HeadContent, Scripts } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import "../styles/app.css";
+import appCss from "../styles/app.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -10,6 +10,7 @@ export const Route = createRootRoute({
       { title: "RK Kit — SaaS Starter" },
       { name: "description", content: "Modern SaaS starter built with TanStack Start" },
     ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   component: RootDocument,
 });
@@ -30,7 +31,6 @@ function Document({ children }: { children: ReactNode }) {
       </head>
       <body className="h-full antialiased">
         {children}
-        <ScrollRestoration />
         <Scripts />
       </body>
     </html>
