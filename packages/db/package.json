@@ -20,6 +20,7 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
@@ -34,6 +35,7 @@
     "drizzle-kit": "^0.31.10",
     "dotenv": "^16.5.0",
     "tsup": "^8.5.1",
-    "typescript": "latest"
+    "typescript": "latest",
+    "vitest": "^3.2.4"
   }
 }

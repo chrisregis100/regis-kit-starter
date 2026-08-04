@@ -125,6 +125,9 @@ importers:
       typescript:
         specifier: latest
         version: 7.0.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.1)(tsx@4.23.5)
 
   packages/db:
     dependencies:
@@ -150,6 +153,9 @@ importers:
       typescript:
         specifier: latest
         version: 7.0.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.1)(tsx@4.23.5)
 
   packages/errors:
     devDependencies:
@@ -159,6 +165,9 @@ importers:
       typescript:
         specifier: latest
         version: 7.0.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.1)(tsx@4.23.5)
 
   packages/ui:
     dependencies:

@@ -9,6 +9,8 @@ build/
 .next/
 out/
 .vinxi/
+.output/
+.nitro/
 
 # Turbo cache
 .turbo/

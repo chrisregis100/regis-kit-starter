@@ -21,7 +21,8 @@
     "build": "tsc --noEmit false",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "tsup": "^8.5.1",
-    "typescript": "latest"
+    "typescript": "latest",
+    "vitest": "^3.2.4"
   }
 }
