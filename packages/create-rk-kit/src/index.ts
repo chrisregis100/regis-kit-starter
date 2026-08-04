@@ -29,6 +29,8 @@ interface ProjectConfig {
 }
 
 const TEMPLATE_REPO = process.env['RK_KIT_TEMPLATE_REPO'] ?? 'rk-kit/regis-kit-starter'
+const APP_DATABASE_USER = 'app_user'
+const APP_DATABASE_PASSWORD = 'change-me-in-production'
 
 const EXCLUDED_TOP_LEVEL_DIRS = new Set([
   'node_modules',
@@ -36,10 +38,10 @@ const EXCLUDED_TOP_LEVEL_DIRS = new Set([
   '.turbo',
   '.output',
   '.pnpm-store',
-  'packages/create-rk-kit',
   'dist',
 ])
 
+const EXCLUDED_PATHS = new Set(['packages/create-rk-kit'])
 const EXCLUDED_TOP_LEVEL_FILES = new Set(['.env'])
 
 const color = {
@@ -80,6 +82,10 @@ function parseArguments(): CliOptions {
 
 function generateAuthSecret(): string {
   return randomBytes(32).toString('base64')
+}
+
+function buildDatabaseUrl(user: string, password: string, databaseName: string): string {
+  return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@localhost:5432/${encodeURIComponent(databaseName)}`
 }
 
 function findLocalTemplateRoot(): string | undefined {
@@ -175,8 +181,10 @@ function buildEnvFile(config: ProjectConfig): string {
     `POSTGRES_PASSWORD=${config.postgresPassword}`,
     `POSTGRES_DB=${config.databaseName}`,
     '',
-    '# Connection string used by Drizzle + Better Auth',
-    `DATABASE_URL=postgresql://${config.postgresUser}:${config.postgresPassword}@localhost:5432/${config.databaseName}`,
+    '# Runtime connection used by Drizzle + Better Auth (RLS enforced)',
+    `DATABASE_URL=${buildDatabaseUrl(APP_DATABASE_USER, APP_DATABASE_PASSWORD, config.databaseName)}`,
+    '# Owner connection used only for database migrations',
+    `DATABASE_URL_MIGRATIONS=${buildDatabaseUrl(config.postgresUser, config.postgresPassword, config.databaseName)}`,
     '',
     '# ─────────────────────────────────────────────',
     '# Better Auth',
@@ -250,6 +258,7 @@ async function copyLocalTemplate(templateRoot: string, targetDir: string): Promi
       const relative = source.replace(templateRoot, '').replace(/^[/\\]/, '')
       const parts = relative.split(/[/\\]/).filter(Boolean)
       if (parts.length === 0) return true
+      if (EXCLUDED_PATHS.has(parts.slice(0, 2).join('/'))) return false
       if (parts.length === 1) {
         return !EXCLUDED_TOP_LEVEL_DIRS.has(parts[0]!) && !EXCLUDED_TOP_LEVEL_FILES.has(parts[0]!)
       }

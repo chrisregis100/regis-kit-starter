@@ -130,8 +130,9 @@ export function SocialAuthButtons({
             key={provider.id}
             type="button"
             variant="outline"
-            className="w-full"
-            disabled={!provider.enabled || isLoading}
+            className="w-full aria-disabled:opacity-50"
+            disabled={isLoading}
+            aria-disabled={!provider.enabled || undefined}
             isLoading={isLoading}
             loadingText={`Continue with ${meta.label}`}
             onClick={() => (provider.enabled ? handleSocialSignIn(provider.id) : handleDisabledClick(provider.id))}

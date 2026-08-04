@@ -11,6 +11,7 @@ rk-kit-monorepo/
 │       ├── src/services/    # business logic (Zod validation + withTenant)
 │       └── src/lib/         # auth client, server-function guards
 ├── packages/
+│   ├── create-rk-kit/       # create-rk-kit — interactive project scaffolder
 │   ├── config/              # @rk-kit/config — Zod-validated env (server/client)
 │   ├── db/                  # @rk-kit/db — Drizzle + pg, migrations, RLS, withTenant
 │   ├── auth/                # @rk-kit/auth — Better Auth config + session helpers
