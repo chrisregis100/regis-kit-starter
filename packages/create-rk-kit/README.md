@@ -1,6 +1,6 @@
 # create-rk-kit
 
-CLI installer for the [RK Kit](https://github.com/rk-kit/regis-kit-starter) SaaS boilerplate. Scaffolds a production-ready TanStack Start monorepo with authentication, multi-tenant PostgreSQL, and a premium landing page in minutes.
+CLI installer for the [RK Kit](https://github.com/chrisregis100/regis-kit-starter) SaaS boilerplate. Scaffolds a production-ready TanStack Start monorepo with authentication, multi-tenant PostgreSQL, and a premium landing page in minutes.
 
 ## Quick start
 
@@ -65,14 +65,14 @@ corepack prepare pnpm@10.29.3 --activate
 
 During setup you will be asked for:
 
-| Prompt | Default | Purpose |
-|---|---|---|
-| Database name | `my-saas` → `my_saas` | PostgreSQL database name |
-| PostgreSQL user | `rk_kit` | Database owner |
-| PostgreSQL password | `rk_kit_secret` | Database password |
-| App port | `3000` | Port for the TanStack Start dev server |
-| Google OAuth | disabled | Optional social login |
-| GitHub OAuth | disabled | Optional social login |
+| Prompt              | Default               | Purpose                                |
+| ------------------- | --------------------- | -------------------------------------- |
+| Database name       | `my-saas` → `my_saas` | PostgreSQL database name               |
+| PostgreSQL user     | `rk_kit`              | Database owner                         |
+| PostgreSQL password | `rk_kit_secret`       | Database password                      |
+| App port            | `3000`                | Port for the TanStack Start dev server |
+| Google OAuth        | disabled              | Optional social login                  |
+| GitHub OAuth        | disabled              | Optional social login                  |
 
 OAuth providers can also be configured later by editing `.env`.
 
@@ -101,7 +101,7 @@ RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
 
 ## Manual install alternative
 
-If you prefer to set up the project by hand, clone the template repository and follow the [main README](https://github.com/rk-kit/regis-kit-starter#readme).
+If you prefer to set up the project by hand, clone the template repository and follow the [main README](https://github.com/chrisregis100/regis-kit-starter#readme).
 
 ## Troubleshooting
 
@@ -144,4 +144,4 @@ pnpm --filter create-rk-kit publish
 
 ## License
 
-[MIT](https://github.com/rk-kit/regis-kit-starter/blob/main/LICENSE)
+[MIT](https://github.com/chrisregis100/regis-kit-starter#blob/main/LICENSE)
