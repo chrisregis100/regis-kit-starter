@@ -1,0 +1,28 @@
+{
+  "name": "@rk-kit/auth",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit false",
+    "dev": "tsc --watch",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "*",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "@rk-kit/config": "workspace:*",
+    "@rk-kit/db": "workspace:*",
+    "@rk-kit/errors": "workspace:*",
+    "better-auth": "^1.6.25"
+  }
+}

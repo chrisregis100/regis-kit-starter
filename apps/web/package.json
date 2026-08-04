@@ -1,0 +1,36 @@
+{
+  "name": "@rk-kit/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rk-kit/auth": "workspace:*",
+    "@rk-kit/config": "workspace:*",
+    "@rk-kit/db": "workspace:*",
+    "@rk-kit/errors": "workspace:*",
+    "@rk-kit/ui": "workspace:*",
+    "@tanstack/react-router": "^1.120.20",
+    "@tanstack/router-devtools": "^1.120.20",
+    "@tanstack/start": "^1.120.20",
+    "@tanstack/start-client-core": "^1.170.14",
+    "better-auth": "^1.6.25",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "vinxi": "^0.5.3",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "tailwindcss": "^4.1.0",
+    "typescript": "latest"
+  }
+}

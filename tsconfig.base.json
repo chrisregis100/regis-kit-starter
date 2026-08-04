@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "paths": {
+      "@rk-kit/config": ["./packages/config/src/index.ts"],
+      "@rk-kit/config/server": ["./packages/config/src/server.ts"],
+      "@rk-kit/config/client": ["./packages/config/src/client.ts"],
+      "@rk-kit/db": ["./packages/db/src/index.ts"],
+      "@rk-kit/auth": ["./packages/auth/src/index.ts"],
+      "@rk-kit/errors": ["./packages/errors/src/index.ts"],
+      "@rk-kit/ui": ["./packages/ui/src/index.ts"]
+    }
+  }
+}
