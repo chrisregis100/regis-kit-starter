@@ -1,6 +1,5 @@
 {
   "name": "rk-kit-monorepo",
-  "private": true,
   "packageManager": "pnpm@10.29.3",
   "scripts": {
     "dev": "turbo run dev",
