@@ -1,6 +1,6 @@
 {
   "name": "create-rk-kit",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "CLI installer for the RK Kit SaaS boilerplate",
   "homepage": "https://github.com/chrisregis100/regis-kit-starter#readme",
   "repository": {

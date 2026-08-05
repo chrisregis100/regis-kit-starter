@@ -1,13 +1,13 @@
-import { execSync } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import {
-  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { cp } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
@@ -56,6 +56,112 @@ const color = {
   cyan: (text: string) => `\x1b[36m${text}\x1b[0m`,
   gray: (text: string) => `\x1b[90m${text}\x1b[0m`,
 };
+
+const isInteractive = process.stdout.isTTY && !process.env.CI;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function rgbColor([r, g, b]: [number, number, number]): string {
+  return `\x1b[38;2;${r};${g};${b}m`;
+}
+
+async function typewrite(text: string, delay: number): Promise<void> {
+  if (!isInteractive) {
+    process.stdout.write(text);
+    return;
+  }
+
+  for (const char of text) {
+    process.stdout.write(char);
+    await sleep(delay);
+  }
+}
+
+class Spinner {
+  private frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  private interval: ReturnType<typeof setInterval> | null = null;
+  private frameIndex = 0;
+
+  start(message: string): void {
+    if (!isInteractive) return;
+    this.stop();
+    this.frameIndex = 0;
+    this.interval = setInterval(() => {
+      const frame = this.frames[this.frameIndex % this.frames.length]!;
+      process.stdout.write(`\r${color.cyan(frame)} ${message}`);
+      this.frameIndex++;
+    }, 80);
+  }
+
+  stop(options: { message?: string; success?: boolean } = {}): void {
+    if (!this.interval) {
+      if (options.message) {
+        const prefix =
+          options.success === false ? color.red("✗") : color.green("✓");
+        console.log(`${prefix} ${options.message}`);
+      }
+      return;
+    }
+
+    clearInterval(this.interval);
+    this.interval = null;
+    process.stdout.write("\r\x1b[K");
+
+    if (options.message) {
+      const prefix =
+        options.success === false ? color.red("✗") : color.green("✓");
+      console.log(`${prefix} ${options.message}`);
+    }
+  }
+}
+
+async function printBanner(): Promise<void> {
+  const lines = [
+    "  ██████╗ ██╗  ██╗    ██╗  ██╗██╗████████╗",
+    "  ██╔══██╗██║ ██╔╝    ██║ ██╔╝██║╚══██╔══╝",
+    "  ██████╔╝█████╔╝     █████╔╝ ██║   ██║   ",
+    "  ██╔══██╗██╔═██╗     ██╔═██╗ ██║   ██║   ",
+    "  ██║  ██║██║  ██╗    ██║  ██╗██║   ██║   ",
+    "  ╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚═╝   ╚═╝   ",
+  ];
+
+  const colors: [number, number, number][] = [
+    [0, 255, 255],
+    [0, 200, 255],
+    [0, 150, 255],
+    [100, 100, 255],
+    [200, 100, 255],
+    [255, 0, 255],
+  ];
+  const fallbackColor = colors[colors.length - 1]!;
+
+  console.log();
+
+  if (!isInteractive) {
+    for (let i = 0; i < lines.length; i++) {
+      const [r, g, b] = colors[i] ?? fallbackColor;
+      console.log(`${rgbColor([r, g, b])}${lines[i]}\x1b[0m`);
+    }
+    console.log();
+    console.log("  Welcome to RK Kit — your SaaS starter CLI");
+    console.log();
+    return;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const [r, g, b] = colors[i] ?? fallbackColor;
+    process.stdout.write(`${rgbColor([r, g, b])}${line}\x1b[0m\n`);
+    await sleep(50);
+  }
+
+  console.log();
+  await typewrite("  Welcome to RK Kit — your SaaS starter CLI", 25);
+  console.log();
+  console.log();
+}
 
 function exitWithError(message: string): never {
   console.error(color.red(message));
@@ -272,28 +378,51 @@ async function copyLocalTemplate(
   templateRoot: string,
   targetDir: string,
 ): Promise<void> {
-  mkdirSync(targetDir, { recursive: true });
+  const spinner = new Spinner();
+  spinner.start("Copying template from local monorepo...");
 
-  cpSync(templateRoot, targetDir, {
-    recursive: true,
-    filter: (source: string) => {
-      const relative = source.replace(templateRoot, "").replace(/^[/\\]/, "");
-      const parts = relative.split(/[/\\]/).filter(Boolean);
-      if (parts.length === 0) return true;
-      if (parts.length === 1) {
-        return (
-          !EXCLUDED_TOP_LEVEL_DIRS.has(parts[0]!) &&
-          !EXCLUDED_TOP_LEVEL_FILES.has(parts[0]!)
-        );
-      }
-      return !EXCLUDED_TOP_LEVEL_DIRS.has(parts[0]!);
-    },
-  });
+  try {
+    mkdirSync(targetDir, { recursive: true });
+    await cp(templateRoot, targetDir, {
+      recursive: true,
+      filter: (source: string) => {
+        const relative = source.replace(templateRoot, "").replace(/^[/\\]/, "");
+        const parts = relative.split(/[/\\]/).filter(Boolean);
+        if (parts.length === 0) return true;
+        if (parts.length === 1) {
+          return (
+            !EXCLUDED_TOP_LEVEL_DIRS.has(parts[0]!) &&
+            !EXCLUDED_TOP_LEVEL_FILES.has(parts[0]!)
+          );
+        }
+        return !EXCLUDED_TOP_LEVEL_DIRS.has(parts[0]!);
+      },
+    });
+  } finally {
+    spinner.stop({ message: "Template copied", success: true });
+  }
 }
 
 async function cloneRemoteTemplate(targetDir: string): Promise<void> {
   const repoUrl = `https://github.com/${TEMPLATE_REPO}.git`;
-  runCommand(`git clone --depth 1 ${repoUrl} "${targetDir}"`, process.cwd());
+  const spinner = new Spinner();
+  spinner.start(`Downloading template from ${TEMPLATE_REPO}...`);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn("git", ["clone", "--depth", "1", repoUrl, targetDir], {
+        stdio: "ignore",
+      });
+      child.on("error", reject);
+      child.on("close", (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`git clone exited with code ${code}`));
+      });
+    });
+  } finally {
+    spinner.stop({ message: "Template downloaded", success: true });
+  }
+
   rmSync(join(targetDir, ".git"), { recursive: true, force: true });
 }
 
@@ -301,12 +430,10 @@ async function installTemplate(targetDir: string): Promise<void> {
   const localRoot = findLocalTemplateRoot();
 
   if (localRoot) {
-    logStep("Copying template from local monorepo...");
     await copyLocalTemplate(localRoot, targetDir);
     return;
   }
 
-  logStep(`Downloading template from ${TEMPLATE_REPO}...`);
   try {
     await cloneRemoteTemplate(targetDir);
   } catch (error) {
@@ -318,21 +445,47 @@ async function installTemplate(targetDir: string): Promise<void> {
   }
 }
 
+function showNextSteps(projectName: string, targetDir: string): void {
+  const cdCommand = `cd ${projectName}`;
+  const devCommand = "pnpm dev";
+
+  console.log();
+  console.log(color.green("Project ready:"), targetDir);
+  console.log();
+  console.log(color.cyan("─────────────────────────────────────────────"));
+  console.log("  Next steps:");
+  console.log();
+  console.log("  1. Move into your project folder:");
+  console.log(`     ${color.cyan(cdCommand)}`);
+  console.log();
+  console.log("  2. Start the development server:");
+  console.log(`     ${color.cyan(devCommand)}`);
+  console.log();
+  console.log("  Or run both at once:");
+  console.log(`     ${color.cyan(`${cdCommand} && ${devCommand}`)}`);
+  console.log(color.cyan("─────────────────────────────────────────────"));
+  console.log();
+}
+
 async function waitForPostgres(
   config: ProjectConfig,
   targetDir: string,
 ): Promise<void> {
   const healthCommand = `docker compose exec -T postgres pg_isready -U ${config.postgresUser} -d ${config.databaseName}`;
+  const spinner = new Spinner();
+  spinner.start("Waiting for PostgreSQL to be healthy...");
 
   for (let attempt = 1; attempt <= 30; attempt++) {
     try {
       execSync(healthCommand, { cwd: targetDir, stdio: "ignore" });
+      spinner.stop({ message: "PostgreSQL is ready", success: true });
       return;
     } catch {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await sleep(1000);
     }
   }
 
+  spinner.stop({ message: "PostgreSQL did not become healthy", success: false });
   throw new Error("PostgreSQL did not become healthy in time.");
 }
 
@@ -349,7 +502,6 @@ async function runPostInstall(
   logStep("Starting PostgreSQL...");
   runCommand("docker compose up -d", targetDir);
 
-  logStep("Waiting for PostgreSQL to be healthy...");
   await waitForPostgres(config, targetDir);
 
   logStep("Applying database migrations...");
@@ -357,8 +509,7 @@ async function runPostInstall(
 }
 
 async function main(): Promise<void> {
-  console.log(color.cyan("create-rk-kit"));
-  console.log();
+  await printBanner();
 
   const options = parseArguments();
   const config = await promptProjectConfig(options.projectName);
@@ -374,15 +525,20 @@ async function main(): Promise<void> {
 
   if (shouldStart) {
     await runPostInstall(config, options.targetDir);
+
+    const shouldStartDev = await promptConfirm(
+      "Start the development server now?",
+      true,
+    );
+
+    if (shouldStartDev) {
+      logStep("Starting development server...");
+      runCommand("pnpm dev", options.targetDir);
+      return;
+    }
   }
 
-  console.log();
-  console.log(color.green("Project ready:"), options.targetDir);
-  console.log();
-  console.log("Next steps:");
-  console.log(`  cd ${options.projectName}`);
-  console.log("  pnpm dev");
-  console.log();
+  showNextSteps(options.projectName, options.targetDir);
 }
 
 main().catch((error: unknown) => {
