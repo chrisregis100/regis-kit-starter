@@ -9,9 +9,10 @@ interface DashboardShellProps {
   children: ReactNode;
   user: SessionUser;
   organizationId: string;
+  isAdmin?: boolean;
 }
 
-export function DashboardShell({ children, user, organizationId }: DashboardShellProps) {
+export function DashboardShell({ children, user, organizationId, isAdmin = false }: DashboardShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -39,6 +40,7 @@ export function DashboardShell({ children, user, organizationId }: DashboardShel
               organizationId={organizationId} 
               className="flex-1" 
               onClose={() => setIsMobileMenuOpen(false)} 
+              isAdmin={isAdmin}
             />
           </div>
         </div>
@@ -48,6 +50,7 @@ export function DashboardShell({ children, user, organizationId }: DashboardShel
       <Sidebar 
         organizationId={organizationId} 
         className="hidden w-56 flex-shrink-0 border-r border-border lg:flex" 
+        isAdmin={isAdmin}
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">

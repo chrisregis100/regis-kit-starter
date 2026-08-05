@@ -16,6 +16,14 @@ export const serverSchema = z.object({
   BETTER_AUTH_URL: z
     .string()
     .url('BETTER_AUTH_URL must be a valid URL (e.g. http://localhost:3000)'),
+  // ─── Platform admin (optional) ───────────────────────────────────────────
+  // Email of the single platform super-admin. When it matches a signed-in
+  // user's email, that user unlocks the /admin dashboard (all users, orgs and
+  // active sessions across the whole platform).
+  ADMIN_EMAIL: z
+    .string()
+    .email('ADMIN_EMAIL must be a valid email address')
+    .optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GITHUB_CLIENT_ID: z.string().optional(),
