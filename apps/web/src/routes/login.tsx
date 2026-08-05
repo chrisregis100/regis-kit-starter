@@ -15,6 +15,8 @@ import {
 import { authClient } from "../lib/auth-client";
 import { AuthLayout } from "../components/shared/AuthLayout";
 import { SocialAuthButtons } from "../components/auth/SocialAuthButtons";
+import { MathChallengeField } from "../components/auth/MathChallengeField";
+import { useMathChallenge } from "../components/auth/use-math-challenge";
 import { getOAuthProvidersStatusFn } from "../services/auth-providers-service";
 
 export const Route = createFileRoute("/login")({
@@ -29,10 +31,18 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mathChallenge = useMathChallenge();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    if (!mathChallenge.isCorrect) {
+      setError("Please solve the quick math check to continue.");
+      mathChallenge.regenerate();
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -120,6 +130,8 @@ function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
+
+            <MathChallengeField challenge={mathChallenge} />
 
             <Button type="submit" className="w-full" isLoading={isLoading} loadingText="Signing in…">
               Sign in
