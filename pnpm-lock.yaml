@@ -105,6 +105,9 @@ importers:
       '@rk-kit/db':
         specifier: workspace:*
         version: link:../db
+      '@rk-kit/email':
+        specifier: workspace:*
+        version: link:../email
       '@rk-kit/errors':
         specifier: workspace:*
         version: link:../errors
@@ -168,6 +171,28 @@ importers:
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(tsx@4.23.5)(typescript@7.0.2)
+      typescript:
+        specifier: latest
+        version: 7.0.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@26.1.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.1)(tsx@4.23.5)
+
+  packages/email:
+    dependencies:
+      '@getbrevo/brevo':
+        specifier: ^6.0.2
+        version: 6.0.2
+      '@rk-kit/config':
+        specifier: workspace:*
+        version: link:../config
+      '@rk-kit/errors':
+        specifier: workspace:*
+        version: link:../errors
+    devDependencies:
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.25)(tsx@4.23.5)(typescript@7.0.2)
@@ -1047,6 +1072,10 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@getbrevo/brevo@6.0.2':
+    resolution: {integrity: sha512-yxyacx4wkuWcCbFDdFE3RxklaHSGXEP3d0gZaxPy+9aBquvl4ksr7IQgbRCcF8crx5aRvpStVBLeh5iCbWHJrg==}
+    engines: {node: '>=18.0.0'}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -3884,6 +3913,8 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@getbrevo/brevo@6.0.2': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

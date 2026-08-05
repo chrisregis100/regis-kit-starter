@@ -14,6 +14,7 @@ rk-kit-monorepo/
 │   ├── config/              # @rk-kit/config — Zod-validated env (server/client)
 │   ├── db/                  # @rk-kit/db — Drizzle + pg, migrations, RLS, withTenant
 │   ├── auth/                # @rk-kit/auth — Better Auth config + session helpers
+│   ├── email/               # @rk-kit/email — transactional email (Brevo), server-only
 │   ├── errors/              # @rk-kit/errors — typed errors + HTTP serialization
 │   └── ui/                  # @rk-kit/ui — shadcn-style primitives (Radix + CVA)
 ├── docs/ai-skills/          # this handbook
@@ -27,6 +28,9 @@ rk-kit-monorepo/
 - **Frontend/server**: TanStack Start (`@tanstack/react-start`, Vite plugin) +
   Nitro (Node server output, `node .output/server/index.mjs`)
 - **Auth**: Better Auth (email/password, Google OAuth, organization plugin)
+- **Email**: Brevo (`@getbrevo/brevo` v6) transactional emails — password reset,
+  organization invitations, email verification. Optional: no-ops (logs) when
+  `BREVO_API_KEY` is unset, so the app boots without an email provider.
 - **Database**: PostgreSQL (Supabase-compatible), Drizzle ORM, drizzle-kit
   migrations, Row-Level Security for tenant isolation
 - **Styling**: Tailwind CSS v4 (`@theme inline` tokens) + `@rk-kit/ui` primitives
@@ -39,6 +43,7 @@ apps/web (routes → server functions → services)
     │  imports
     ▼
 packages/auth ─→ packages/db ─→ (PostgreSQL)
+packages/auth ─→ packages/email ─→ (Brevo API)
 packages/config, packages/errors, packages/ui   (leaf utilities)
 ```
 
@@ -47,7 +52,11 @@ packages/config, packages/errors, packages/ui   (leaf utilities)
 - `packages/*` are shared infrastructure: generic, product-agnostic, stable.
   A fix in a package benefits every app that imports it.
 - Packages never import from `apps/*`. `packages/ui` never contains business
-  logic. `packages/auth` and `packages/db` are server-only.
+  logic. `packages/auth`, `packages/db`, and `packages/email` are server-only.
+- `packages/email` is invoked from Better Auth callbacks
+  (`sendResetPassword`, `sendInvitationEmail`, `sendVerificationEmail`) in
+  `packages/auth/src/config.ts`. It loads the Brevo SDK lazily so it never
+  enters client bundles or test module graphs.
 
 ## Request flow (protected page)
 

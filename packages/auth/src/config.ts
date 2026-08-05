@@ -8,6 +8,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import { serverEnv } from "@rk-kit/config";
 import {
+  sendPasswordResetEmail,
+  sendInvitationEmail,
+  sendVerificationEmail,
+} from "@rk-kit/email";
+import {
   getDb,
   user,
   session,
@@ -49,7 +54,14 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
     sendResetPassword: async ({ user: u, url }: { user: { email: string }; url: string; token: string }) => {
-      console.log(`[auth] Reset password URL for ${u.email}: ${url}`);
+      await sendPasswordResetEmail({ to: u.email, url });
+    },
+  },
+
+  emailVerification: {
+    sendOnSignUp: false,
+    sendVerificationEmail: async ({ user: u, url }: { user: { email: string }; url: string; token: string }) => {
+      await sendVerificationEmail({ to: u.email, url });
     },
   },
 
@@ -58,6 +70,15 @@ export const auth = betterAuth({
   plugins: [
     organization({
       allowUserToCreateOrganization: true,
+      sendInvitationEmail: async (data) => {
+        const url = `${serverEnv.BETTER_AUTH_URL}/onboarding?invitation=${data.id}`;
+        await sendInvitationEmail({
+          to: data.email,
+          url,
+          organizationName: data.organization.name,
+          inviterName: data.inviter.user.name,
+        });
+      },
     }),
   ],
 });

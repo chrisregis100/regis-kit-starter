@@ -33,6 +33,12 @@ export const serverSchema = z.object({
   DISCORD_CLIENT_SECRET: z.string().optional(),
   LINKEDIN_CLIENT_ID: z.string().optional(),
   LINKEDIN_CLIENT_SECRET: z.string().optional(),
+  BREVO_API_KEY: z.string().optional(),
+  EMAIL_FROM: z
+    .string()
+    .email('EMAIL_FROM must be a valid email address')
+    .optional(),
+  EMAIL_FROM_NAME: z.string().optional(),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),

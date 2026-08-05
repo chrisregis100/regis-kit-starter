@@ -28,6 +28,7 @@
       "@rk-kit/db": ["./packages/db/src/index.ts"],
       "@rk-kit/auth": ["./packages/auth/src/index.ts"],
       "@rk-kit/errors": ["./packages/errors/src/index.ts"],
+      "@rk-kit/email": ["./packages/email/src/index.ts"],
       "@rk-kit/ui": ["./packages/ui/src/index.ts"]
     }
   }

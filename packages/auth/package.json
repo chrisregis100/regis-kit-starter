@@ -22,6 +22,7 @@
   "dependencies": {
     "@rk-kit/config": "workspace:*",
     "@rk-kit/db": "workspace:*",
+    "@rk-kit/email": "workspace:*",
     "@rk-kit/errors": "workspace:*",
     "better-auth": "^1.6.25",
     "jose": "^6.0.11"

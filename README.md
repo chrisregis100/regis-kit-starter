@@ -30,6 +30,7 @@ Most SaaS projects waste the first two weeks on the same boilerplate: auth flow,
 |---|---|
 | **Authentication** | Email/password, Google & GitHub OAuth, password reset, sessions, organizations, and role-based access via [Better Auth](https://www.better-auth.com/). |
 | **Multi-tenancy** | Organizations with invites, member roles, and PostgreSQL RLS enforced on every business table. |
+| **Transactional email** | Password reset, organization invitations, and email verification via [Brevo](https://www.brevo.com/). Optional — logs instead of sending when unconfigured. |
 | **Landing page** | Hero, features, pricing, testimonials, and footer — fully editable React components. |
 | **Dashboard shell** | Navigation, team management, settings, and billing placeholder — protected server-side. |
 | **Database** | PostgreSQL, [Drizzle ORM](https://orm.drizzle.team/), migrations, and RLS policies. |
@@ -42,6 +43,7 @@ Most SaaS projects waste the first two weeks on the same boilerplate: auth flow,
 
 - **Framework**: [TanStack Start](https://tanstack.com/start/)
 - **Auth**: [Better Auth](https://www.better-auth.com/)
+- **Email**: [Brevo](https://www.brevo.com/) transactional API (`@getbrevo/brevo`)
 - **Database**: PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/) + RLS
 - **Styling**: Tailwind CSS v4 + Radix UI
 - **Workspace**: pnpm workspaces + [Turborepo](https://turbo.build/)
@@ -228,6 +230,23 @@ http://localhost:3000/api/auth/callback/google
 
 > Apple Sign-In does **not** support `http://localhost` callbacks. Use a tunnel such as `ngrok` or configure it only for production.
 
+### Email (Brevo, optional)
+
+Transactional emails (password reset, organization invitations, email
+verification) are sent through [Brevo](https://www.brevo.com/). Leave
+`BREVO_API_KEY` empty to disable sending — emails are logged to the console
+instead, so local development and first boot work without an email account.
+
+| Variable | Description | Example |
+|---|---|---|
+| `BREVO_API_KEY` | Brevo API key ([Settings → API keys](https://app.brevo.com/settings/keys/api)) | `xkeysib-…` |
+| `EMAIL_FROM` | Sender address — must be a [verified sender/domain](https://app.brevo.com/senders) | `no-reply@yourdomain.com` |
+| `EMAIL_FROM_NAME` | Display name shown to recipients | `RK Kit` |
+
+> The sender address must be verified in Brevo, otherwise sends are rejected.
+> Email verification is wired but dormant: flip `requireEmailVerification` and
+> `sendOnSignUp` in `packages/auth/src/config.ts` to enable it.
+
 ### Docker production variables
 
 When running the full production image via `docker compose --profile app up`, Compose injects the following defaults if they are not set:
@@ -384,13 +403,14 @@ apps/web/src/api          REST handlers + middleware for /api/v1/*
 packages/config           Zod-validated environment
 packages/db               Drizzle + migrations + RLS + withTenant
 packages/auth             Better Auth + session helpers
+packages/email            transactional email (Brevo) — server-only
 packages/errors           typed error hierarchy + HTTP serialization
 packages/ui               shadcn-style primitives (Radix + CVA + Tailwind)
 packages/create-rk-kit    interactive CLI installer for new projects
 docs/ai-skills            architecture, conventions, data access, API layer, add-module guide
 ```
 
-Modules (Stripe, mobile money, Redis, monitoring, email, jobs, audit log) are added **only on a real trigger** — see [docs/ai-skills/add-module.md](docs/ai-skills/add-module.md).
+Modules (Stripe, mobile money, Redis, monitoring, jobs, audit log) are added **only on a real trigger** — see [docs/ai-skills/add-module.md](docs/ai-skills/add-module.md). The email module (`@rk-kit/email`) ships wired to Better Auth and is enabled by setting `BREVO_API_KEY`.
 
 ## Package installer development
 
