@@ -14,9 +14,13 @@
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@rk-kit/auth": "workspace:*",
+    "@rk-kit/billing": "workspace:*",
     "@rk-kit/config": "workspace:*",
     "@rk-kit/db": "workspace:*",
     "@rk-kit/errors": "workspace:*",
+    "@rk-kit/payments-fedapay": "workspace:*",
+    "@rk-kit/payments-kkiapay": "workspace:*",
+    "@rk-kit/payments-stripe": "workspace:*",
     "@rk-kit/ui": "workspace:*",
     "@tanstack/react-router": "^1.170.18",
     "@tanstack/react-start": "^1.168.35",

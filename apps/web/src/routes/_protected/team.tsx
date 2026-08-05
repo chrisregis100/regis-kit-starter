@@ -141,26 +141,30 @@ function TeamPage() {
                   .toUpperCase();
 
                 return (
-                  <li key={member.id} className="flex items-center gap-4 px-5 py-3">
-                    <Avatar className="h-9 w-9 flex-shrink-0">
-                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                      <p className="truncate text-xs text-muted-foreground">{member.user?.email}</p>
+                  <li key={member.id} className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 px-4 py-3 md:gap-4 md:px-5">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Avatar className="h-9 w-9 flex-shrink-0">
+                        <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                        <p className="truncate text-xs text-muted-foreground">{member.user?.email}</p>
+                      </div>
                     </div>
-                    <Badge variant={member.role === "admin" ? "default" : "secondary"}>
-                      {member.role}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={`Remove ${displayName}`}
-                    >
-                      Remove
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={member.role === "admin" ? "default" : "secondary"}>
+                        {member.role}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={`Remove ${displayName}`}
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </li>
                 );
               })}
@@ -178,13 +182,15 @@ function TeamPage() {
           <CardContent className="p-0">
             <ul className="divide-y divide-border" role="list">
               {invitations.map((inv) => (
-                <li key={inv.id} className="flex items-center gap-4 px-5 py-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted">
-                    <UserCircle weight="duotone" className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{inv.email}</p>
-                    <p className="text-xs text-muted-foreground">Invitation pending</p>
+                <li key={inv.id} className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 px-4 py-3 md:gap-4 md:px-5">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted">
+                      <UserCircle weight="duotone" className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{inv.email}</p>
+                      <p className="text-xs text-muted-foreground">Invitation pending</p>
+                    </div>
                   </div>
                   <Badge variant="secondary">{inv.role}</Badge>
                 </li>
@@ -206,8 +212,56 @@ function TeamSkeleton() {
         <Skeleton className="h-8 w-24" />
         <Skeleton className="h-4 w-64" />
       </div>
-      <Skeleton className="h-40 rounded-xl" />
-      <Skeleton className="h-64 rounded-xl" />
+
+      {/* Invite Card Skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="space-y-1.5 sm:w-36">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <Skeleton className="h-10 w-full sm:w-28 rounded-md" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Members List Skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-4 w-20" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <ul className="divide-y divide-border" role="list">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <li key={i} className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 px-4 py-3 md:gap-4 md:px-5">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Skeleton className="h-4 w-48" />
     </div>
   );
 }

@@ -29,7 +29,11 @@
       "@rk-kit/auth": ["./packages/auth/src/index.ts"],
       "@rk-kit/errors": ["./packages/errors/src/index.ts"],
       "@rk-kit/email": ["./packages/email/src/index.ts"],
-      "@rk-kit/ui": ["./packages/ui/src/index.ts"]
+      "@rk-kit/ui": ["./packages/ui/src/index.ts"],
+      "@rk-kit/billing": ["./packages/billing/src/index.ts"],
+      "@rk-kit/payments-stripe": ["./packages/payments-stripe/src/index.ts"],
+      "@rk-kit/payments-kkiapay": ["./packages/payments-kkiapay/src/index.ts"],
+      "@rk-kit/payments-fedapay": ["./packages/payments-fedapay/src/index.ts"]
     }
   }
 }

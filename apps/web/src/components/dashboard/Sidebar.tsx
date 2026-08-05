@@ -18,11 +18,13 @@ const navItems: { label: string; href: "/dashboard" | "/team" | "/settings" | "/
 
 interface SidebarProps {
   organizationId: string;
+  className?: string;
+  onClose?: () => void;
 }
 
-export function Sidebar({ organizationId: _organizationId }: SidebarProps) {
+export function Sidebar({ organizationId: _organizationId, className, onClose }: SidebarProps) {
   return (
-    <aside className="hidden w-56 flex-shrink-0 border-r border-border bg-card lg:flex lg:flex-col">
+    <aside className={cn("flex flex-col bg-card", className)}>
       <div className="flex h-16 items-center border-b border-border px-4">
         <Logo size="sm" />
       </div>
@@ -32,6 +34,7 @@ export function Sidebar({ organizationId: _organizationId }: SidebarProps) {
           <Link
             key={href}
             to={href}
+            onClick={onClose}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors",
               "hover:bg-accent hover:text-accent-foreground",

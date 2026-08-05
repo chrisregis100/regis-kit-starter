@@ -31,8 +31,9 @@ Most SaaS projects waste the first two weeks on the same boilerplate: auth flow,
 | **Authentication** | Email/password, Google & GitHub OAuth, password reset, sessions, organizations, and role-based access via [Better Auth](https://www.better-auth.com/). |
 | **Multi-tenancy** | Organizations with invites, member roles, and PostgreSQL RLS enforced on every business table. |
 | **Transactional email** | Password reset, organization invitations, and email verification via [Brevo](https://www.brevo.com/). Optional — logs instead of sending when unconfigured. |
+| **Payments** | Optional providers: [Stripe](https://stripe.com/) (subscriptions), [KKiapay](https://kkiapay.me/) and [FedaPay](https://fedapay.com/) (mobile money, West Africa). Enable only the ones you configure. |
 | **Landing page** | Hero, features, pricing, testimonials, and footer — fully editable React components. |
-| **Dashboard shell** | Navigation, team management, settings, and billing placeholder — protected server-side. |
+| **Dashboard shell** | Navigation, team management, settings, and billing — protected server-side. |
 | **Database** | PostgreSQL, [Drizzle ORM](https://orm.drizzle.team/), migrations, and RLS policies. |
 | **UI primitives** | [Radix UI](https://www.radix-ui.com/) + [Tailwind CSS v4](https://tailwindcss.com/) + [CVA](https://cva.style/) components. |
 | **Quality gates** | TypeScript, lint, Vitest tests, RLS integration tests, smoke test, and CI. |
@@ -247,6 +248,23 @@ instead, so local development and first boot work without an email account.
 > Email verification is wired but dormant: flip `requireEmailVerification` and
 > `sendOnSignUp` in `packages/auth/src/config.ts` to enable it.
 
+### Payments (optional)
+
+Billing is provider-optional: fill in the variables for a provider to enable it
+in the dashboard, leave the others blank. The app boots without any provider
+configured.
+
+| Provider | Use case | Variables |
+|---|---|---|
+| Stripe | Recurring subscriptions (cards, SEPA, …) | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_ENTERPRISE` |
+| KKiapay | Mobile money, cards, Wave (West Africa) | `KKIAPAY_PUBLIC_KEY`, `KKIAPAY_PRIVATE_KEY`, `KKIAPAY_SECRET_KEY`, `KKIAPAY_SANDBOX` |
+| FedaPay | Mobile money, cards (West Africa) | `FEDAPAY_SECRET_KEY`, `FEDAPAY_SANDBOX` |
+
+Webhook endpoints to register:
+- Stripe: `{BETTER_AUTH_URL}/api/webhooks/stripe`
+- KKiapay: `{BETTER_AUTH_URL}/api/webhooks/kkiapay`
+- FedaPay: `{BETTER_AUTH_URL}/api/webhooks/fedapay`
+
 ### Docker production variables
 
 When running the full production image via `docker compose --profile app up`, Compose injects the following defaults if they are not set:
@@ -403,6 +421,10 @@ apps/web/src/api          REST handlers + middleware for /api/v1/*
 packages/config           Zod-validated environment
 packages/db               Drizzle + migrations + RLS + withTenant
 packages/auth             Better Auth + session helpers
+packages/billing          billing core: plans, provider detection, subscription helpers
+packages/payments-stripe  Stripe subscriptions: Checkout, Portal, webhooks
+packages/payments-kkiapay KKiapay mobile-money widget + verify + webhooks
+packages/payments-fedapay FedaPay transactions + webhooks
 packages/email            transactional email (Brevo) — server-only
 packages/errors           typed error hierarchy + HTTP serialization
 packages/ui               shadcn-style primitives (Radix + CVA + Tailwind)
@@ -410,7 +432,7 @@ packages/create-rk-kit    interactive CLI installer for new projects
 docs/ai-skills            architecture, conventions, data access, API layer, add-module guide
 ```
 
-Modules (Stripe, mobile money, Redis, monitoring, jobs, audit log) are added **only on a real trigger** — see [docs/ai-skills/add-module.md](docs/ai-skills/add-module.md). The email module (`@rk-kit/email`) ships wired to Better Auth and is enabled by setting `BREVO_API_KEY`.
+Modules (Redis, monitoring, jobs, audit log) are added **only on a real trigger** — see [docs/ai-skills/add-module.md](docs/ai-skills/add-module.md). The email module (`@rk-kit/email`) ships wired to Better Auth and is enabled by setting `BREVO_API_KEY`. The billing/payment modules are optional and enabled by their provider-specific environment variables.
 
 ## Package installer development
 

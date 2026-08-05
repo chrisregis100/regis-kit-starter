@@ -39,6 +39,18 @@ export const serverSchema = z.object({
     .email('EMAIL_FROM must be a valid email address')
     .optional(),
   EMAIL_FROM_NAME: z.string().optional(),
+  // ─── Billing / payments (optional — enable only the providers you need)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_ID_PRO: z.string().optional(),
+  STRIPE_PRICE_ID_ENTERPRISE: z.string().optional(),
+  KKIAPAY_PUBLIC_KEY: z.string().optional(),
+  KKIAPAY_PRIVATE_KEY: z.string().optional(),
+  KKIAPAY_SECRET_KEY: z.string().optional(),
+  KKIAPAY_SANDBOX: z.enum(['true', 'false']).optional(),
+  FEDAPAY_SECRET_KEY: z.string().optional(),
+  FEDAPAY_SANDBOX: z.enum(['true', 'false']).optional(),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
