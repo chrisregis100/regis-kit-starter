@@ -9,7 +9,14 @@ import type { KkiapayTransaction } from './verify.js'
 
 export interface KkiapayWebhookPayload {
   transactionId: string
-  data?: { organizationId?: string; subscriptionId?: string } | undefined
+  data?:
+    | {
+        organizationId?: string
+        paymentId?: string
+        subscriptionId?: string
+      }
+    | string
+    | undefined
 }
 
 export interface KkiapayWebhookEvent {

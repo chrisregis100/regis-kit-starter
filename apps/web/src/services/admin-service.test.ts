@@ -6,7 +6,7 @@
  * exercises the shaping/aggregation logic without a real connection.
  */
 import { describe, expect, it } from "vitest";
-import { organization, user, type Db } from "@rk-kit/db";
+import { organization, session, user, type Db } from "@rk-kit/db";
 import {
   getAdminDashboardData,
   type AdminActiveSession,
@@ -15,14 +15,18 @@ import {
 interface FakeResults {
   users: number;
   orgs: number;
+  activeSessionCount: number;
   sessions: AdminActiveSession[];
 }
 
 function makeFakeDb(results: FakeResults): Db {
-  function makeBuilder(fromTable: unknown) {
+  function makeBuilder(fromTable: unknown, isCountQuery: boolean) {
     const resolve = (): unknown => {
       if (fromTable === user) return [{ value: results.users }];
       if (fromTable === organization) return [{ value: results.orgs }];
+      if (fromTable === session && isCountQuery) {
+        return [{ value: results.activeSessionCount }];
+      }
       return results.sessions;
     };
 
@@ -38,7 +42,10 @@ function makeFakeDb(results: FakeResults): Db {
   }
 
   return {
-    select: () => ({ from: (table: unknown) => makeBuilder(table) }),
+    select: (fields: Record<string, unknown>) => ({
+      from: (table: unknown) =>
+        makeBuilder(table, Object.keys(fields).length === 1 && "value" in fields),
+    }),
   } as unknown as Db;
 }
 
@@ -55,18 +62,28 @@ const fakeSession: AdminActiveSession = {
 
 describe("getAdminDashboardData", () => {
   it("aggregates counts and returns active sessions", async () => {
-    const db = makeFakeDb({ users: 12, orgs: 3, sessions: [fakeSession] });
+    const db = makeFakeDb({
+      users: 12,
+      orgs: 3,
+      activeSessionCount: 145,
+      sessions: [fakeSession],
+    });
 
     const data = await getAdminDashboardData(db);
 
     expect(data.totalUsers).toBe(12);
     expect(data.totalOrganizations).toBe(3);
-    expect(data.activeSessionCount).toBe(1);
+    expect(data.activeSessionCount).toBe(145);
     expect(data.activeSessions).toEqual([fakeSession]);
   });
 
   it("handles an empty platform", async () => {
-    const db = makeFakeDb({ users: 0, orgs: 0, sessions: [] });
+    const db = makeFakeDb({
+      users: 0,
+      orgs: 0,
+      activeSessionCount: 0,
+      sessions: [],
+    });
 
     const data = await getAdminDashboardData(db);
 

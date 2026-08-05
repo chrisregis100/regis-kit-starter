@@ -15,7 +15,7 @@ import {
   createStripeCheckout,
   createStripePortal,
   getBillingStatus,
-  handleKkiapayWebhook,
+  verifyKkiapayPayment,
   type CreateFedaPayPaymentInput,
   type CreateStripeCheckoutInput,
 } from "../services/billing-service";
@@ -33,6 +33,7 @@ const checkoutSchema = planSchema.merge(redirectUrlSchema);
 const fedapaySchema = planSchema.merge(redirectUrlSchema);
 const returnUrlSchema = z.object({ returnUrl: z.string().url() });
 const kkiapayWebhookSchema = z.object({
+  paymentId: z.string().uuid(),
   transactionId: z.string().min(1),
 });
 
@@ -87,9 +88,10 @@ export const verifyKkiapayTransactionFn = createServerFn({ method: "POST" })
   .handler(async (ctx) => {
     const request = getRequest();
     const { organizationId } = await requireOrganization(request.headers);
-    await handleKkiapayWebhook({
-      ...ctx.data,
-      data: { organizationId },
-    });
+    await verifyKkiapayPayment(
+      organizationId,
+      ctx.data.transactionId,
+      ctx.data.paymentId,
+    );
     return { success: true };
   });

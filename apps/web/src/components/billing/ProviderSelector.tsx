@@ -36,13 +36,17 @@ interface ProviderSelectorProps {
 interface KkiapayWindow extends Window {
   openKkiapayWidget?: (options: Record<string, unknown>) => void;
   addSuccessListener?: (callback: (response: Record<string, unknown>) => void) => void;
+  removeKkiapayListener?: (event: "success" | "failed") => void;
 }
 
 export function ProviderSelector({ providers, subscription }: ProviderSelectorProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<PaymentProvider | "portal" | null>(null);
 
-  const activeProvider = subscription?.provider as PaymentProvider | null;
+  const activeProvider =
+    subscription?.status === "active"
+      ? (subscription.provider as PaymentProvider | null)
+      : null;
   const isStripeActive = activeProvider === PaymentProvider.STRIPE;
 
   async function handleStripeCheckout(plan: "pro" | "enterprise") {
@@ -82,27 +86,37 @@ export function ProviderSelector({ providers, subscription }: ProviderSelectorPr
         throw new Error("KKiapay is not configured");
       }
 
-      const { amount } = await createKkiapayPaymentFn({ data: { plan } });
+      const { amount, organizationId, paymentId } = await createKkiapayPaymentFn({
+        data: { plan },
+      });
 
       await ensureKkiapayScriptLoaded();
       const kkiapay = window as KkiapayWindow;
+      if (!kkiapay.openKkiapayWidget || !kkiapay.addSuccessListener) {
+        throw new Error("KKiapay SDK is unavailable");
+      }
 
-      kkiapay.openKkiapayWidget?.({
-        amount: String(amount),
-        key: config.publicConfig.publicKey,
-        sandbox: config.publicConfig.sandbox,
-        position: "center",
-        data: JSON.stringify({ plan }),
-      });
-
-      kkiapay.addSuccessListener?.(async (response: Record<string, unknown>) => {
+      kkiapay.removeKkiapayListener?.("success");
+      kkiapay.addSuccessListener(async (response: Record<string, unknown>) => {
+        kkiapay.removeKkiapayListener?.("success");
         const requestData = response.requestData as Record<string, unknown> | undefined;
         const transactionId =
           (response.transactionId as string) || (requestData?.transactionId as string);
         if (transactionId) {
-          await verifyKkiapayTransactionFn({ data: { transactionId } });
+          await verifyKkiapayTransactionFn({
+            data: { paymentId, transactionId },
+          });
           router.invalidate();
         }
+      });
+
+      kkiapay.openKkiapayWidget({
+        amount: String(amount),
+        key: config.publicConfig.publicKey,
+        sandbox: config.publicConfig.sandbox,
+        position: "center",
+        partnerId: paymentId,
+        data: JSON.stringify({ organizationId, paymentId }),
       });
     } finally {
       setIsLoading(null);
@@ -237,17 +251,52 @@ export function ProviderSelector({ providers, subscription }: ProviderSelectorPr
 
 function ensureKkiapayScriptLoaded(): Promise<void> {
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[src="https://cdn.kkiapay.me/k.js"]');
-    if (existing) {
+    const handleLoad = () => {
+      if ((window as KkiapayWindow).openKkiapayWidget) {
+        resolve();
+        return;
+      }
+      reject(new Error("KKiapay SDK failed to initialize"));
+    };
+
+    if ((window as KkiapayWindow).openKkiapayWidget) {
       resolve();
+      return;
+    }
+
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://cdn.kkiapay.me/k.js"]',
+    );
+    if (existing) {
+      if (existing.dataset["kkiapayLoadState"] === "failed") {
+        reject(new Error("Failed to load KKiapay SDK"));
+        return;
+      }
+      if (existing.dataset["kkiapayLoadState"] === "loaded") {
+        reject(new Error("KKiapay SDK failed to initialize"));
+        return;
+      }
+      existing.addEventListener("load", handleLoad, { once: true });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("Failed to load KKiapay SDK")),
+        { once: true },
+      );
       return;
     }
 
     const script = document.createElement("script");
     script.src = "https://cdn.kkiapay.me/k.js";
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load KKiapay SDK"));
+    script.dataset["kkiapayLoadState"] = "loading";
+    script.onload = () => {
+      script.dataset["kkiapayLoadState"] = "loaded";
+      handleLoad();
+    };
+    script.onerror = () => {
+      script.dataset["kkiapayLoadState"] = "failed";
+      reject(new Error("Failed to load KKiapay SDK"));
+    };
     document.body.appendChild(script);
   });
 }

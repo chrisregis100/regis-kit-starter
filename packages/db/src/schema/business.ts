@@ -10,7 +10,14 @@
  * so the RLS policy can verify the caller's organization via
  * `current_setting('app.current_organization_id', true)`.
  */
-import { index, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { organization } from "./auth.js";
 
 // ─── Projects (example business entity) ──────────────────────────────────────
@@ -92,6 +99,10 @@ export const payment = pgTable(
   (t) => [
     index("payment_organizationId_idx").on(t.organizationId),
     index("payment_providerPaymentId_idx").on(t.providerPaymentId),
+    uniqueIndex("payment_provider_providerPaymentId_uidx").on(
+      t.provider,
+      t.providerPaymentId,
+    ),
   ],
 );
 

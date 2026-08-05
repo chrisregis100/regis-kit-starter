@@ -49,6 +49,14 @@ async function countRows(db: Db, table: typeof user | typeof organization): Prom
   return rows[0]?.value ?? 0;
 }
 
+async function countActiveSessions(db: Db): Promise<number> {
+  const rows = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(session)
+    .where(sql`${session.expiresAt} > now()`);
+  return rows[0]?.value ?? 0;
+}
+
 /**
  * Aggregate platform metrics + the list of currently active (non-expired)
  * sessions, each enriched with the owning user's name and email.
@@ -56,31 +64,33 @@ async function countRows(db: Db, table: typeof user | typeof organization): Prom
 export async function getAdminDashboardData(
   db: Db = getDb(),
 ): Promise<AdminDashboardData> {
-  const [totalUsers, totalOrganizations, activeSessions] = await Promise.all([
-    countRows(db, user),
-    countRows(db, organization),
-    db
-      .select({
-        id: session.id,
-        userId: session.userId,
-        userName: user.name,
-        userEmail: user.email,
-        ipAddress: session.ipAddress,
-        userAgent: session.userAgent,
-        createdAt: session.createdAt,
-        expiresAt: session.expiresAt,
-      })
-      .from(session)
-      .innerJoin(user, eq(session.userId, user.id))
-      .where(sql`${session.expiresAt} > now()`)
-      .orderBy(desc(session.createdAt))
-      .limit(100),
-  ]);
+  const [totalUsers, totalOrganizations, activeSessionCount, activeSessions] =
+    await Promise.all([
+      countRows(db, user),
+      countRows(db, organization),
+      countActiveSessions(db),
+      db
+        .select({
+          id: session.id,
+          userId: session.userId,
+          userName: user.name,
+          userEmail: user.email,
+          ipAddress: session.ipAddress,
+          userAgent: session.userAgent,
+          createdAt: session.createdAt,
+          expiresAt: session.expiresAt,
+        })
+        .from(session)
+        .innerJoin(user, eq(session.userId, user.id))
+        .where(sql`${session.expiresAt} > now()`)
+        .orderBy(desc(session.createdAt))
+        .limit(100),
+    ]);
 
   return {
     totalUsers,
     totalOrganizations,
-    activeSessionCount: activeSessions.length,
+    activeSessionCount,
     activeSessions,
   };
 }

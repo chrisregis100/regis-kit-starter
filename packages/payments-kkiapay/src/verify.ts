@@ -17,6 +17,7 @@ export interface KkiapayTransaction {
   status: 'SUCCESS' | 'FAILED' | 'PENDING' | string
   amount: number
   currency: string
+  partnerId?: string | undefined
   phone?: string | undefined
   performedAt?: string | undefined
   reason?: string | undefined
@@ -75,6 +76,9 @@ function normalizeKkiapayTransaction(
     status,
     amount,
     currency: 'XOF',
+    partnerId:
+      (data.partnerId as string | undefined) ??
+      (data.partner_id as string | undefined),
     phone: data.phone as string | undefined,
     performedAt: data.performedAt as string | undefined,
     reason: data.reason as string | undefined,

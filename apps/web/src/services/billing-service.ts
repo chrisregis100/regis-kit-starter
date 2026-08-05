@@ -33,6 +33,7 @@ import {
   verifyStripeWebhook,
 } from "@rk-kit/payments-stripe";
 import {
+  and,
   eq,
   payment,
   subscription,
@@ -101,7 +102,7 @@ export async function createStripeCheckout(
     );
   }
 
-  const sub = await getOrCreateSubscription(organizationId, runInTenant);
+  await getOrCreateSubscription(organizationId, runInTenant);
   const result = await createStripeCheckoutSession(
     {
       organizationId,
@@ -112,17 +113,6 @@ export async function createStripeCheckout(
     },
     serverEnv,
   );
-
-  await runInTenant(organizationId, async (tx) => {
-    await tx
-      .update(subscription)
-      .set({
-        plan: parsed.data.plan,
-        provider: PaymentProvider.STRIPE,
-        updatedAt: new Date(),
-      })
-      .where(eq(subscription.id, sub.id));
-  });
 
   return { url: result.url };
 }
@@ -153,14 +143,33 @@ export async function createKkiapayPayment(
   organizationId: string,
   plan: Plan,
   runInTenant: TenantRunner = withTenant,
-): Promise<{ amount: number; currency: string }> {
+): Promise<{
+  amount: number;
+  currency: string;
+  organizationId: string;
+  paymentId: string;
+}> {
   const amount = getPlanPriceInXOF(plan);
   if (amount <= 0) {
     throw new BadRequestError("Selected plan cannot be paid via KKiapay");
   }
 
-  await getOrCreateSubscription(organizationId, runInTenant);
-  return { amount, currency: "XOF" };
+  const sub = await getOrCreateSubscription(organizationId, runInTenant);
+  const paymentId = crypto.randomUUID();
+  await runInTenant(organizationId, async (tx) => {
+    await tx.insert(payment).values({
+      id: paymentId,
+      organizationId,
+      subscriptionId: sub.id,
+      provider: PaymentProvider.KKIAPAY,
+      amount: String(amount),
+      currency: "XOF",
+      status: "pending",
+      metadata: { plan },
+    });
+  });
+
+  return { amount, currency: "XOF", organizationId, paymentId };
 }
 
 export async function createFedaPayPayment(
@@ -258,18 +267,27 @@ export async function handleStripeWebhook(
 
     await tx.update(subscription).set(update).where(eq(subscription.id, sub.id));
 
-    if (event.type === "invoice.paid" && event.amount !== null) {
-      await tx.insert(payment).values({
-        id: crypto.randomUUID(),
-        organizationId,
-        subscriptionId: sub.id,
-        provider: PaymentProvider.STRIPE,
-        providerPaymentId: event.providerPaymentId ?? event.providerSubscriptionId,
-        amount: event.amount ? String(event.amount) : null,
-        currency: event.currency?.toUpperCase() ?? null,
-        status: "succeeded",
-        paidAt: new Date(),
-      } as NewPayment);
+    if (
+      event.type === "invoice.paid" &&
+      event.amount !== null &&
+      event.providerPaymentId
+    ) {
+      await tx
+        .insert(payment)
+        .values({
+          id: crypto.randomUUID(),
+          organizationId,
+          subscriptionId: sub.id,
+          provider: PaymentProvider.STRIPE,
+          providerPaymentId: event.providerPaymentId,
+          amount: event.amount ? String(event.amount) : null,
+          currency: event.currency?.toUpperCase() ?? null,
+          status: "succeeded",
+          paidAt: new Date(),
+        } as NewPayment)
+        .onConflictDoNothing({
+          target: [payment.provider, payment.providerPaymentId],
+        });
     }
   });
 }
@@ -278,6 +296,37 @@ export async function handleKkiapayWebhook(
   payload: KkiapayWebhookPayload,
 ): Promise<void> {
   const { transactionId } = parseKkiapayWebhook(payload);
+  const rawPayload = payload as unknown as Record<string, unknown>;
+  let data = rawPayload.data as
+    | { organizationId?: string; paymentId?: string }
+    | string
+    | undefined;
+
+  if (typeof data === "string") {
+    try {
+      data = JSON.parse(data) as {
+        organizationId?: string;
+        paymentId?: string;
+      };
+    } catch {
+      data = undefined;
+    }
+  }
+
+  const organizationId = data?.organizationId;
+  const paymentId = data?.paymentId;
+  if (!organizationId || !paymentId) {
+    throw new BadRequestError("KKiapay payment binding data is missing");
+  }
+
+  await verifyKkiapayPayment(organizationId, transactionId, paymentId);
+}
+
+export async function verifyKkiapayPayment(
+  organizationId: string,
+  transactionId: string,
+  paymentId: string,
+): Promise<void> {
   const { transaction } = await verifyKkiapayTransaction(
     { transactionId },
     serverEnv,
@@ -286,25 +335,8 @@ export async function handleKkiapayWebhook(
   if (transaction.status !== "SUCCESS") {
     throw new BadRequestError("KKiapay transaction was not successful");
   }
-
-  const rawPayload = payload as unknown as Record<string, unknown>;
-  let data = rawPayload.data as
-    | { organizationId?: string; subscriptionId?: string }
-    | string
-    | undefined;
-
-  if (typeof data === "string") {
-    try {
-      data = JSON.parse(data) as { organizationId?: string; subscriptionId?: string };
-    } catch {
-      data = undefined;
-    }
-  }
-
-  const organizationId = data?.organizationId;
-  if (!organizationId) {
-    console.warn("[billing] KKiapay webhook missing organizationId in data; skipping");
-    return;
+  if (transaction.partnerId !== paymentId) {
+    throw new BadRequestError("KKiapay transaction does not match this payment");
   }
 
   await creditOneTimePayment(organizationId, {
@@ -313,6 +345,7 @@ export async function handleKkiapayWebhook(
     amount: String(transaction.amount),
     currency: "XOF",
     metadata: { phone: transaction.phone },
+    pendingPaymentId: paymentId,
   });
 }
 
@@ -352,12 +385,29 @@ async function creditOneTimePayment(
     amount: string;
     currency: string;
     metadata?: Record<string, unknown>;
+    pendingPaymentId?: string;
   },
   runInTenant: TenantRunner = withTenant,
 ): Promise<void> {
   const periodDays = 30;
 
   await runInTenant(organizationId, async (tx) => {
+    const matchingPayments = await tx
+      .select({
+        id: payment.id,
+        status: payment.status,
+      })
+      .from(payment)
+      .where(
+        and(
+          eq(payment.provider, paymentData.provider),
+          eq(payment.providerPaymentId, paymentData.providerPaymentId),
+        ),
+      )
+      .limit(1);
+    const matchingPayment = matchingPayments[0];
+    if (matchingPayment?.status === "succeeded") return;
+
     const existing = await tx
       .select()
       .from(subscription)
@@ -365,6 +415,93 @@ async function creditOneTimePayment(
       .limit(1);
 
     const sub = existing[0] ?? (await createSubscriptionRow(tx, organizationId));
+    let creditedPayment: { id: string } | undefined;
+
+    if (matchingPayment) {
+      const rows = await tx
+        .update(payment)
+        .set({
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          status: "succeeded",
+          paidAt: new Date(),
+          metadata: paymentData.metadata,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(payment.id, matchingPayment.id),
+            eq(payment.status, "pending"),
+          ),
+        )
+        .returning({ id: payment.id });
+      creditedPayment = rows[0];
+    } else if (paymentData.pendingPaymentId) {
+      const pendingPayments = await tx
+        .select({
+          id: payment.id,
+          amount: payment.amount,
+          currency: payment.currency,
+        })
+        .from(payment)
+        .where(
+          and(
+            eq(payment.id, paymentData.pendingPaymentId),
+            eq(payment.provider, paymentData.provider),
+            eq(payment.status, "pending"),
+          ),
+        )
+        .limit(1);
+      const pendingPayment = pendingPayments[0];
+      if (
+        !pendingPayment ||
+        pendingPayment.amount !== paymentData.amount ||
+        pendingPayment.currency !== paymentData.currency
+      ) {
+        throw new BadRequestError("KKiapay payment amount or owner does not match");
+      }
+
+      const rows = await tx
+        .update(payment)
+        .set({
+          providerPaymentId: paymentData.providerPaymentId,
+          status: "succeeded",
+          paidAt: new Date(),
+          metadata: paymentData.metadata,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(payment.id, pendingPayment.id),
+            eq(payment.status, "pending"),
+          ),
+        )
+        .returning({ id: payment.id });
+      creditedPayment = rows[0];
+    } else {
+      const rows = await tx
+        .insert(payment)
+        .values({
+          id: crypto.randomUUID(),
+          organizationId,
+          subscriptionId: sub.id,
+          provider: paymentData.provider,
+          providerPaymentId: paymentData.providerPaymentId,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          status: "succeeded",
+          paidAt: new Date(),
+          metadata: paymentData.metadata,
+        } as NewPayment)
+        .onConflictDoNothing({
+          target: [payment.provider, payment.providerPaymentId],
+        })
+        .returning({ id: payment.id });
+      creditedPayment = rows[0];
+    }
+
+    if (!creditedPayment) return;
+
     const baseDate = sub.currentPeriodEnd && new Date(sub.currentPeriodEnd) > new Date()
       ? new Date(sub.currentPeriodEnd)
       : new Date();
@@ -381,19 +518,6 @@ async function creditOneTimePayment(
         updatedAt: new Date(),
       })
       .where(eq(subscription.id, sub.id));
-
-    await tx.insert(payment).values({
-      id: crypto.randomUUID(),
-      organizationId,
-      subscriptionId: sub.id,
-      provider: paymentData.provider,
-      providerPaymentId: paymentData.providerPaymentId,
-      amount: paymentData.amount,
-      currency: paymentData.currency,
-      status: "succeeded",
-      paidAt: new Date(),
-      metadata: paymentData.metadata,
-    } as NewPayment);
   });
 }
 
