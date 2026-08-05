@@ -22,6 +22,8 @@ import {
   member,
   organization,
   session as sessionTable,
+  sql,
+  user,
 } from "@rk-kit/db";
 import { auth } from "./config.js";
 import type { AuthSession } from "./types.js";
@@ -97,6 +99,26 @@ export async function requireSession(headers: Headers): Promise<AuthSession> {
     throw new UnauthorizedError("Authentication is required to access this resource.");
   }
   return authSession;
+}
+
+/**
+ * Whether an account exists for the given email (case-insensitive).
+ *
+ * SECURITY NOTE: exposing this result to clients enables user enumeration.
+ * Use it only where that trade-off is intentional (e.g. explicit
+ * "email not found" feedback on the forgot-password form).
+ */
+export async function userExistsByEmail(email: string): Promise<boolean> {
+  const db = getDb();
+  const normalized = email.trim().toLowerCase();
+
+  const rows = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(sql`lower(${user.email}) = ${normalized}`)
+    .limit(1);
+
+  return rows.length > 0;
 }
 
 /** Organisations the user belongs to, ordered by creation date. */

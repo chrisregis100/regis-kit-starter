@@ -26,6 +26,7 @@ export {
 export {
   getSession,
   requireSession,
+  userExistsByEmail,
   listUserOrganizations,
   setSessionActiveOrganization,
   resolvePostAuthDestination,

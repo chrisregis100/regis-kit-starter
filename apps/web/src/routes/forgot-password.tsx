@@ -12,6 +12,7 @@ import {
   CardFooter,
 } from "@rk-kit/ui";
 import { authClient } from "../lib/auth-client";
+import { checkEmailExistsFn } from "../server/auth-fns";
 import { AuthLayout } from "../components/shared/AuthLayout";
 
 export const Route = createFileRoute("/forgot-password")({
@@ -30,6 +31,12 @@ function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
+      const { exists } = await checkEmailExistsFn({ data: { email } });
+      if (!exists) {
+        setError("No account found with this email address.");
+        return;
+      }
+
       await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" });
       setIsSuccess(true);
     } catch {
