@@ -13,15 +13,18 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit false",
     "dev": "tsc --watch",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
     "tsup": "*",
-    "typescript": "latest"
+    "typescript": "latest",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@rk-kit/config": "workspace:*",
     "@rk-kit/db": "workspace:*",
+    "@rk-kit/email": "workspace:*",
     "@rk-kit/errors": "workspace:*",
     "better-auth": "^1.6.25",
     "jose": "^6.0.11"

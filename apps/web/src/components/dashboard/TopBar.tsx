@@ -16,9 +16,10 @@ import { authClient } from "../../lib/auth-client";
 
 interface TopBarProps {
   user: SessionUser;
+  onOpenMobileMenu?: () => void;
 }
 
-export function TopBar({ user }: TopBarProps) {
+export function TopBar({ user, onOpenMobileMenu }: TopBarProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -34,11 +35,12 @@ export function TopBar({ user }: TopBarProps) {
     .toUpperCase();
 
   return (
-    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-border bg-card px-6">
+    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-border bg-card px-4 md:px-6">
       <button
         type="button"
         className="rounded-md p-1.5 text-muted-foreground hover:bg-accent lg:hidden"
         aria-label="Open sidebar"
+        onClick={onOpenMobileMenu}
       >
         <List weight="bold" className="h-5 w-5" aria-hidden="true" />
       </button>

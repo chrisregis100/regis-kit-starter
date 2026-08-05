@@ -10,11 +10,13 @@ import {
   CardDescription,
   CardContent,
   Separator,
+  Skeleton,
 } from "@rk-kit/ui";
 import { authClient } from "../../lib/auth-client";
 
 export const Route = createFileRoute("/_protected/settings")({
   component: SettingsPage,
+  pendingComponent: SettingsSkeleton,
 });
 
 function SettingsPage() {
@@ -114,6 +116,53 @@ function SettingsPage() {
             Account deletion is not yet implemented in this version.
             Contact support if you need to delete your account.
           </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SettingsSkeleton() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-4 w-72" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-3 w-40" />
+            </div>
+
+            <Skeleton className="h-10 w-32 rounded-md" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-64 mt-2" />
         </CardContent>
       </Card>
     </div>

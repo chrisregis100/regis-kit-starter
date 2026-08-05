@@ -15,6 +15,8 @@ import {
 import { authClient } from "../lib/auth-client";
 import { AuthLayout } from "../components/shared/AuthLayout";
 import { SocialAuthButtons } from "../components/auth/SocialAuthButtons";
+import { MathChallengeField } from "../components/auth/MathChallengeField";
+import { useMathChallenge } from "../components/auth/use-math-challenge";
 import { getOAuthProvidersStatusFn } from "../services/auth-providers-service";
 
 export const Route = createFileRoute("/signup")({
@@ -30,6 +32,7 @@ function SignupPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mathChallenge = useMathChallenge();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,6 +40,12 @@ function SignupPage() {
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (!mathChallenge.isCorrect) {
+      setError("Please solve the quick math check to continue.");
+      mathChallenge.regenerate();
       return;
     }
 
@@ -133,6 +142,8 @@ function SignupPage() {
                 minLength={8}
               />
             </div>
+
+            <MathChallengeField challenge={mathChallenge} />
 
             <Button type="submit" className="w-full" isLoading={isLoading} loadingText="Creating account…">
               Create account

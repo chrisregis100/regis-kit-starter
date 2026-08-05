@@ -17,6 +17,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SelectOrganizationRouteImport } from './routes/select-organization'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ProtectedAdminRouteImport } from './routes/_protected/admin'
 import { Route as ProtectedBillingRouteImport } from './routes/_protected/billing'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
@@ -24,6 +25,9 @@ import { Route as ProtectedTeamRouteImport } from './routes/_protected/team'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiV1ProjectsRouteImport } from './routes/api/v1/projects'
 import { Route as ApiV1TeamRouteImport } from './routes/api/v1/team'
+import { Route as ApiWebhooksFedapayRouteImport } from './routes/api/webhooks/fedapay'
+import { Route as ApiWebhooksKkiapayRouteImport } from './routes/api/webhooks/kkiapay'
+import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
 import { Route as ApiV1ProjectsIdRouteImport } from './routes/api/v1/projects.$id'
 import { Route as ApiV1TeamInvitationsRouteImport } from './routes/api/v1/team.invitations'
 import { Route as ApiV1TeamMembersIdRouteImport } from './routes/api/v1/team.members.$id'
@@ -67,6 +71,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedAdminRoute = ProtectedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedBillingRoute = ProtectedBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -102,6 +111,21 @@ const ApiV1TeamRoute = ApiV1TeamRouteImport.update({
   path: '/api/v1/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksFedapayRoute = ApiWebhooksFedapayRouteImport.update({
+  id: '/api/webhooks/fedapay',
+  path: '/api/webhooks/fedapay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksKkiapayRoute = ApiWebhooksKkiapayRouteImport.update({
+  id: '/api/webhooks/kkiapay',
+  path: '/api/webhooks/kkiapay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
+  id: '/api/webhooks/stripe',
+  path: '/api/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1ProjectsIdRoute = ApiV1ProjectsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -126,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/select-organization': typeof SelectOrganizationRoute
   '/signup': typeof SignupRoute
+  '/admin': typeof ProtectedAdminRoute
   '/billing': typeof ProtectedBillingRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/settings': typeof ProtectedSettingsRoute
@@ -133,6 +158,9 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/api/v1/team': typeof ApiV1TeamRouteWithChildren
+  '/api/webhooks/fedapay': typeof ApiWebhooksFedapayRoute
+  '/api/webhooks/kkiapay': typeof ApiWebhooksKkiapayRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/api/v1/projects/$id': typeof ApiV1ProjectsIdRoute
   '/api/v1/team/invitations': typeof ApiV1TeamInvitationsRoute
   '/api/v1/team/members/$id': typeof ApiV1TeamMembersIdRoute
@@ -145,6 +173,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/select-organization': typeof SelectOrganizationRoute
   '/signup': typeof SignupRoute
+  '/admin': typeof ProtectedAdminRoute
   '/billing': typeof ProtectedBillingRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/settings': typeof ProtectedSettingsRoute
@@ -152,6 +181,9 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/api/v1/team': typeof ApiV1TeamRouteWithChildren
+  '/api/webhooks/fedapay': typeof ApiWebhooksFedapayRoute
+  '/api/webhooks/kkiapay': typeof ApiWebhooksKkiapayRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/api/v1/projects/$id': typeof ApiV1ProjectsIdRoute
   '/api/v1/team/invitations': typeof ApiV1TeamInvitationsRoute
   '/api/v1/team/members/$id': typeof ApiV1TeamMembersIdRoute
@@ -166,6 +198,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/select-organization': typeof SelectOrganizationRoute
   '/signup': typeof SignupRoute
+  '/_protected/admin': typeof ProtectedAdminRoute
   '/_protected/billing': typeof ProtectedBillingRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/settings': typeof ProtectedSettingsRoute
@@ -173,6 +206,9 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/api/v1/team': typeof ApiV1TeamRouteWithChildren
+  '/api/webhooks/fedapay': typeof ApiWebhooksFedapayRoute
+  '/api/webhooks/kkiapay': typeof ApiWebhooksKkiapayRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/api/v1/projects/$id': typeof ApiV1ProjectsIdRoute
   '/api/v1/team/invitations': typeof ApiV1TeamInvitationsRoute
   '/api/v1/team/members/$id': typeof ApiV1TeamMembersIdRoute
@@ -187,6 +223,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/select-organization'
     | '/signup'
+    | '/admin'
     | '/billing'
     | '/dashboard'
     | '/settings'
@@ -194,6 +231,9 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/v1/projects'
     | '/api/v1/team'
+    | '/api/webhooks/fedapay'
+    | '/api/webhooks/kkiapay'
+    | '/api/webhooks/stripe'
     | '/api/v1/projects/$id'
     | '/api/v1/team/invitations'
     | '/api/v1/team/members/$id'
@@ -206,6 +246,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/select-organization'
     | '/signup'
+    | '/admin'
     | '/billing'
     | '/dashboard'
     | '/settings'
@@ -213,6 +254,9 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/v1/projects'
     | '/api/v1/team'
+    | '/api/webhooks/fedapay'
+    | '/api/webhooks/kkiapay'
+    | '/api/webhooks/stripe'
     | '/api/v1/projects/$id'
     | '/api/v1/team/invitations'
     | '/api/v1/team/members/$id'
@@ -226,6 +270,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/select-organization'
     | '/signup'
+    | '/_protected/admin'
     | '/_protected/billing'
     | '/_protected/dashboard'
     | '/_protected/settings'
@@ -233,6 +278,9 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/v1/projects'
     | '/api/v1/team'
+    | '/api/webhooks/fedapay'
+    | '/api/webhooks/kkiapay'
+    | '/api/webhooks/stripe'
     | '/api/v1/projects/$id'
     | '/api/v1/team/invitations'
     | '/api/v1/team/members/$id'
@@ -250,6 +298,9 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiV1ProjectsRoute: typeof ApiV1ProjectsRouteWithChildren
   ApiV1TeamRoute: typeof ApiV1TeamRouteWithChildren
+  ApiWebhooksFedapayRoute: typeof ApiWebhooksFedapayRoute
+  ApiWebhooksKkiapayRoute: typeof ApiWebhooksKkiapayRoute
+  ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -310,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protected/admin': {
+      id: '/_protected/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof ProtectedAdminRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/billing': {
       id: '/_protected/billing'
       path: '/billing'
@@ -359,6 +417,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/fedapay': {
+      id: '/api/webhooks/fedapay'
+      path: '/api/webhooks/fedapay'
+      fullPath: '/api/webhooks/fedapay'
+      preLoaderRoute: typeof ApiWebhooksFedapayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/kkiapay': {
+      id: '/api/webhooks/kkiapay'
+      path: '/api/webhooks/kkiapay'
+      fullPath: '/api/webhooks/kkiapay'
+      preLoaderRoute: typeof ApiWebhooksKkiapayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/stripe': {
+      id: '/api/webhooks/stripe'
+      path: '/api/webhooks/stripe'
+      fullPath: '/api/webhooks/stripe'
+      preLoaderRoute: typeof ApiWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/projects/$id': {
       id: '/api/v1/projects/$id'
       path: '/$id'
@@ -384,6 +463,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProtectedRouteChildren {
+  ProtectedAdminRoute: typeof ProtectedAdminRoute
   ProtectedBillingRoute: typeof ProtectedBillingRoute
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
@@ -391,6 +471,7 @@ interface ProtectedRouteChildren {
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedAdminRoute: ProtectedAdminRoute,
   ProtectedBillingRoute: ProtectedBillingRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
@@ -439,6 +520,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiV1ProjectsRoute: ApiV1ProjectsRouteWithChildren,
   ApiV1TeamRoute: ApiV1TeamRouteWithChildren,
+  ApiWebhooksFedapayRoute: ApiWebhooksFedapayRoute,
+  ApiWebhooksKkiapayRoute: ApiWebhooksKkiapayRoute,
+  ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

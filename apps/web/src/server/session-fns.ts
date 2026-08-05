@@ -11,6 +11,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { redirect } from "@tanstack/react-router";
 import {
   getSession,
+  isAdmin,
   listUserOrganizations,
   resolvePostAuthDestination,
   setSessionActiveOrganization,
@@ -49,6 +50,7 @@ export const getProtectedContext = createServerFn({ method: "GET" }).handler(
       session: destination.session,
       user: destination.user,
       organizationId: destination.organizationId,
+      isAdmin: isAdmin(destination.user.email),
     };
   },
 );

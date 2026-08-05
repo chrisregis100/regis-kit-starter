@@ -19,7 +19,11 @@ export const Route = createFileRoute("/_protected")({
 function ProtectedLayout() {
   const ctx = Route.useRouteContext();
   return (
-    <DashboardShell user={ctx.user} organizationId={ctx.organizationId}>
+    <DashboardShell
+      user={ctx.user}
+      organizationId={ctx.organizationId}
+      isAdmin={ctx.isAdmin}
+    >
       <Outlet />
     </DashboardShell>
   );

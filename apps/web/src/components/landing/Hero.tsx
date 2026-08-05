@@ -1,6 +1,7 @@
 import { ArrowRight, Terminal } from "@phosphor-icons/react";
 import { Button } from "@rk-kit/ui";
 import { Link } from "@tanstack/react-router";
+import { authClient } from "../../lib/auth-client";
 
 /*
  * RK Kit landing design plan — "Launch Control"
@@ -49,6 +50,9 @@ const launchSteps = [
 ] as const;
 
 export function Hero() {
+  const { data: sessionData } = authClient.useSession();
+  const user = sessionData?.user;
+
   return (
     <section className="relative overflow-hidden bg-background pt-32 pb-20 sm:pt-40 sm:pb-28">
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -80,9 +84,15 @@ export function Hero() {
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button asChild size="lg" className="w-full rounded-lg sm:w-auto">
-              <Link to="/signup">Start for free</Link>
-            </Button>
+            {user ? (
+              <Button asChild size="lg" className="w-full rounded-lg sm:w-auto">
+                <Link to="/dashboard">Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="w-full rounded-lg sm:w-auto">
+                <Link to="/signup">Start for free</Link>
+              </Button>
+            )}
             <Button
               asChild
               variant="outline"
@@ -152,7 +162,7 @@ function LaunchTerminal() {
       </div>
 
       <div className="px-4 py-5 sm:px-6 sm:py-6">
-        <pre className="font-mono text-sm leading-7 text-foreground">
+        <pre className="overflow-x-auto font-mono text-sm leading-7 text-foreground">
           <code>
             <span className="text-muted-foreground">$</span>{" "}
             npx create-rk-kit@latest my-app
@@ -161,14 +171,14 @@ function LaunchTerminal() {
 
         <ul className="mt-3 space-y-1 font-mono text-sm leading-7 text-muted-foreground">
           {launchSteps.map((step) => (
-            <li key={step} className="flex items-center gap-2">
-              <span className="text-success">✓</span>
-              {step}
+            <li key={step} className="flex items-start gap-2">
+              <span className="mt-0.5 text-success">✓</span>
+              <span className="flex-1">{step}</span>
             </li>
           ))}
         </ul>
 
-        <pre className="mt-4 font-mono text-sm leading-7 text-foreground">
+        <pre className="mt-4 overflow-x-auto font-mono text-sm leading-7 text-foreground">
           <code>
             <span className="text-muted-foreground">$</span> cd my-app && pnpm dev
           </code>

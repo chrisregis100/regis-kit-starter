@@ -40,7 +40,7 @@ function DashboardPage() {
         {stats.map(({ label, icon: Icon, getValue }) => (
           <div
             key={label}
-            className="rounded-xl border border-border bg-card p-5"
+            className="rounded-xl border border-border bg-card p-4 md:p-5"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-primary">
@@ -76,7 +76,30 @@ function DashboardSkeleton() {
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
-      <Skeleton className="h-64 rounded-xl" />
+      
+      {/* ProjectsPanel Skeleton */}
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-4 py-4 md:px-5">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-4 w-12" />
+          </div>
+          <Skeleton className="h-8 w-28 rounded-md" />
+        </div>
+        <ul className="divide-y divide-border" role="list">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <li key={i} className="flex items-center gap-3 px-4 py-3 md:gap-4 md:px-5">
+              <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-md" />
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

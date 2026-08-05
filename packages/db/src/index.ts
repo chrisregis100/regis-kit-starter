@@ -32,8 +32,17 @@ export {
   member,
   invitation,
   project,
+  subscription,
+  payment,
 } from "./schema/index.js";
-export type { Project, NewProject } from "./schema/index.js";
+export type {
+  Project,
+  NewProject,
+  Subscription,
+  NewSubscription,
+  Payment,
+  NewPayment,
+} from "./schema/index.js";
 
 // ── Schema bundle (convenience for Better Auth drizzleAdapter({ schema })) ────
 export * as schema from "./schema/index.js";
