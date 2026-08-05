@@ -9,14 +9,49 @@
  * // Protected route — throws UnauthorizedError if not authenticated
  * const { user, session } = await requireSession(request.headers);
  *
- * // Org-scoped route — throws ForbiddenError if no active organisation
+ * // Org-scoped route — throws ForbiddenError if no organisation membership
  * const { user, session, organizationId } = await requireOrganization(request.headers);
  * // Then use: withTenant(organizationId, async (db) => { … })
  * ```
  */
 import { ForbiddenError, UnauthorizedError } from "@rk-kit/errors";
+import {
+  asc,
+  eq,
+  getDb,
+  member,
+  organization,
+  session as sessionTable,
+} from "@rk-kit/db";
 import { auth } from "./config.js";
 import type { AuthSession } from "./types.js";
+
+export interface UserOrganization {
+  id: string;
+  name: string;
+  slug: string | null;
+  logo: string | null;
+  createdAt: Date;
+}
+
+export type PostAuthDestination =
+  | {
+      kind: "dashboard";
+      organizationId: string;
+      session: AuthSession["session"];
+      user: AuthSession["user"];
+    }
+  | {
+      kind: "select";
+      organizations: UserOrganization[];
+      session: AuthSession["session"];
+      user: AuthSession["user"];
+    }
+  | {
+      kind: "onboarding";
+      session: AuthSession["session"];
+      user: AuthSession["user"];
+    };
 
 /**
  * Returns the current session+user pair, or null if no valid session exists.
@@ -64,27 +99,129 @@ export async function requireSession(headers: Headers): Promise<AuthSession> {
   return authSession;
 }
 
+/** Organisations the user belongs to, ordered by creation date. */
+export async function listUserOrganizations(
+  userId: string,
+): Promise<UserOrganization[]> {
+  const db = getDb();
+
+  return db
+    .select({
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      logo: organization.logo,
+      createdAt: organization.createdAt,
+    })
+    .from(member)
+    .innerJoin(organization, eq(member.organizationId, organization.id))
+    .where(eq(member.userId, userId))
+    .orderBy(asc(organization.createdAt));
+}
+
+/** Persist the active organisation on the session row (DB). */
+export async function setSessionActiveOrganization(
+  sessionToken: string,
+  organizationId: string,
+): Promise<void> {
+  const db = getDb();
+
+  await db
+    .update(sessionTable)
+    .set({
+      activeOrganizationId: organizationId,
+      updatedAt: new Date(),
+    })
+    .where(eq(sessionTable.token, sessionToken));
+}
+
+/**
+ * Post-login / post-auth routing decision based on organisation memberships:
+ *   - 0 orgs  → onboarding (create / join)
+ *   - 1 org   → activate it and go to dashboard
+ *   - N orgs  → org picker (unless a valid active org is already on the session)
+ */
+export async function resolvePostAuthDestination(
+  headers: Headers,
+  authSession?: AuthSession,
+): Promise<PostAuthDestination | null> {
+  const resolved = authSession ?? (await getSession(headers));
+  if (!resolved) return null;
+
+  const organizations = await listUserOrganizations(resolved.user.id);
+
+  if (organizations.length === 0) {
+    return {
+      kind: "onboarding",
+      session: resolved.session,
+      user: resolved.user,
+    };
+  }
+
+  const activeOrganizationId = resolved.session.activeOrganizationId;
+  const hasValidActive =
+    !!activeOrganizationId &&
+    organizations.some((org) => org.id === activeOrganizationId);
+
+  if (hasValidActive && activeOrganizationId) {
+    return {
+      kind: "dashboard",
+      organizationId: activeOrganizationId,
+      session: resolved.session,
+      user: resolved.user,
+    };
+  }
+
+  if (organizations.length === 1) {
+    const organizationId = organizations[0]!.id;
+    await setSessionActiveOrganization(resolved.session.token, organizationId);
+
+    return {
+      kind: "dashboard",
+      organizationId,
+      session: { ...resolved.session, activeOrganizationId: organizationId },
+      user: resolved.user,
+    };
+  }
+
+  return {
+    kind: "select",
+    organizations,
+    session: resolved.session,
+    user: resolved.user,
+  };
+}
+
 /**
  * Ensures the user is authenticated AND has an active organisation.
- * Throws:
- *   - UnauthorizedError (401) if not authenticated
- *   - ForbiddenError (403) if no active organisation is set
  *
- * Returns session, user, and the resolved organizationId to pass to withTenant().
+ * If the session has no active org but the user has exactly one membership,
+ * that org is activated automatically. Multiple memberships without an active
+ * org require an explicit choice (ForbiddenError).
  */
 export async function requireOrganization(headers: Headers): Promise<{
   session: AuthSession["session"];
   user: AuthSession["user"];
   organizationId: string;
 }> {
-  const { session, user } = await requireSession(headers);
+  const authSession = await requireSession(headers);
+  const destination = await resolvePostAuthDestination(headers, authSession);
 
-  const organizationId = session.activeOrganizationId;
-  if (!organizationId) {
+  if (!destination || destination.kind === "onboarding") {
     throw new ForbiddenError(
       "An active organisation is required. Please select or create one.",
     );
   }
 
-  return { session, user, organizationId };
+  if (destination.kind === "select") {
+    throw new ForbiddenError(
+      "Please select an organisation before continuing.",
+    );
+  }
+
+  return {
+    session: destination.session,
+    user: destination.user,
+    organizationId: destination.organizationId,
+  };
 }

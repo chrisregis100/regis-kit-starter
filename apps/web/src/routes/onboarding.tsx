@@ -1,16 +1,10 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getServerSession } from "../server/session-fns";
+import { createFileRoute } from "@tanstack/react-router";
+import { getOnboardingContext } from "../server/session-fns";
 import { OnboardingClient } from "../components/onboarding/OnboardingClient";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Set up your workspace — RK Kit" }] }),
-  beforeLoad: async () => {
-    const session = await getServerSession();
-    if (!session) throw redirect({ to: "/login" });
-    if (session.session.activeOrganizationId) {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
+  beforeLoad: async () => getOnboardingContext(),
   component: OnboardingPage,
 });
 

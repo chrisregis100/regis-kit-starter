@@ -6,7 +6,8 @@ import { nitro } from "nitro/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(__dirname, "../..");
 
 /**
  * TanStack Start + Nitro (Node.js/Docker/Render deployment).
@@ -20,6 +21,19 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
  */
 export default defineConfig({
   envDir: repoRoot,
+  server: {
+    watch: {
+      ignored: [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/.output/**",
+        "**/dist/**",
+        "**/.turbo/**",
+        "**/.vinxi/**",
+        "**/apps/web/app/**",
+      ],
+    },
+  },
   plugins: [
     // Order matters: tanstackStart() must come before viteReact().
     tanstackStart(),

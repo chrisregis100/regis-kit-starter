@@ -5,10 +5,11 @@ import { getProtectedContext } from "../server/session-fns";
 /**
  * Pathless layout guarding every dashboard route.
  *
- * The guard runs on the server (server function): unauthenticated users are
- * redirected to /login, authenticated users without an active organization
- * to /onboarding. The resolved { session, user, organizationId } is exposed
- * as router context to all child routes.
+ * The guard runs on the server (server function):
+ *   - unauthenticated → /login
+ *   - no orgs → /onboarding
+ *   - multiple orgs without an active one → /select-organization
+ * The resolved { session, user, organizationId } is exposed as router context.
  */
 export const Route = createFileRoute("/_protected")({
   beforeLoad: async () => getProtectedContext(),

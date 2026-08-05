@@ -15,6 +15,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SelectOrganizationRouteImport } from './routes/select-organization'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProtectedBillingRouteImport } from './routes/_protected/billing'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
@@ -54,6 +55,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SelectOrganizationRoute = SelectOrganizationRouteImport.update({
+  id: '/select-organization',
+  path: '/select-organization',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/select-organization': typeof SelectOrganizationRoute
   '/signup': typeof SignupRoute
   '/billing': typeof ProtectedBillingRoute
   '/dashboard': typeof ProtectedDashboardRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/select-organization': typeof SelectOrganizationRoute
   '/signup': typeof SignupRoute
   '/billing': typeof ProtectedBillingRoute
   '/dashboard': typeof ProtectedDashboardRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/select-organization': typeof SelectOrganizationRoute
   '/signup': typeof SignupRoute
   '/_protected/billing': typeof ProtectedBillingRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/reset-password'
+    | '/select-organization'
     | '/signup'
     | '/billing'
     | '/dashboard'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/reset-password'
+    | '/select-organization'
     | '/signup'
     | '/billing'
     | '/dashboard'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/reset-password'
+    | '/select-organization'
     | '/signup'
     | '/_protected/billing'
     | '/_protected/dashboard'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SelectOrganizationRoute: typeof SelectOrganizationRoute
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiV1ProjectsRoute: typeof ApiV1ProjectsRouteWithChildren
@@ -281,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/select-organization': {
+      id: '/select-organization'
+      path: '/select-organization'
+      fullPath: '/select-organization'
+      preLoaderRoute: typeof SelectOrganizationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -414,6 +434,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SelectOrganizationRoute: SelectOrganizationRoute,
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiV1ProjectsRoute: ApiV1ProjectsRouteWithChildren,

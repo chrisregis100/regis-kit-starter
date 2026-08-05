@@ -92,7 +92,7 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({
   providers,
-  callbackURL = "/dashboard",
+  callbackURL = "/select-organization",
   onError,
 }: SocialAuthButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<OAuthProviderId | null>(null);

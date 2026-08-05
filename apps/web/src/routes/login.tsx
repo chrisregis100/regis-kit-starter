@@ -41,7 +41,7 @@ function LoginPage() {
         setError(result.error.message ?? "Invalid email or password.");
         return;
       }
-      await router.navigate({ to: "/dashboard" });
+      await router.navigate({ to: "/select-organization" });
     } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -63,7 +63,7 @@ function LoginPage() {
           {hasOAuth && (
             <SocialAuthButtons
               providers={oauthProviderStatuses}
-              callbackURL="/dashboard"
+              callbackURL="/select-organization"
               onError={setError}
             />
           )}

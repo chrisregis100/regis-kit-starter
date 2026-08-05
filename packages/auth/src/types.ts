@@ -26,7 +26,10 @@ export interface SessionRecord {
   expiresAt: Date;
   ipAddress: string | null;
   userAgent: string | null;
-  /** Active organisation chosen by the user. Null if none selected. */
+  /**
+   * Active organisation for this session. Null until one is selected
+   * (or auto-selected when the user has exactly one membership).
+   */
   activeOrganizationId: string | null;
   createdAt: Date;
   updatedAt: Date;
