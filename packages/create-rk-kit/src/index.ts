@@ -439,7 +439,9 @@ async function installTemplate(targetDir: string): Promise<void> {
   } catch (error) {
     throw new Error(
       `Failed to download template from ${TEMPLATE_REPO}. ` +
-        `Set RK_KIT_TEMPLATE_REPO to a valid GitHub repository or run the installer from inside the RK Kit monorepo.\n` +
+        `The default repository is chrisregis100/regis-kit-starter. ` +
+        `Override it with RK_KIT_TEMPLATE_REPO (e.g. RK_KIT_TEMPLATE_REPO=chrisregis100/regis-kit-starter) ` +
+        `or run the installer from inside the RK Kit monorepo.\n` +
         `Original error: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
