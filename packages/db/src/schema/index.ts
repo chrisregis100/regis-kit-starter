@@ -15,5 +15,12 @@ export {
 } from "./auth.js";
 
 // Business domain tables (add new tables here as the product grows)
-export { project } from "./business.js";
-export type { Project, NewProject } from "./business.js";
+export { project, subscription, payment } from "./business.js";
+export type {
+  Project,
+  NewProject,
+  Subscription,
+  NewSubscription,
+  Payment,
+  NewPayment,
+} from "./business.js";

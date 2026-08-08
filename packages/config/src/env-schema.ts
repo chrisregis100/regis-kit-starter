@@ -16,6 +16,14 @@ export const serverSchema = z.object({
   BETTER_AUTH_URL: z
     .string()
     .url('BETTER_AUTH_URL must be a valid URL (e.g. http://localhost:3000)'),
+  // ─── Platform admin (optional) ───────────────────────────────────────────
+  // Email of the single platform super-admin. When it matches a signed-in
+  // user's email, that user unlocks the /admin dashboard (all users, orgs and
+  // active sessions across the whole platform).
+  ADMIN_EMAIL: z
+    .string()
+    .email('ADMIN_EMAIL must be a valid email address')
+    .optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GITHUB_CLIENT_ID: z.string().optional(),
@@ -39,6 +47,18 @@ export const serverSchema = z.object({
     .email('EMAIL_FROM must be a valid email address')
     .optional(),
   EMAIL_FROM_NAME: z.string().optional(),
+  // ─── Billing / payments (optional — enable only the providers you need)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_ID_PRO: z.string().optional(),
+  STRIPE_PRICE_ID_ENTERPRISE: z.string().optional(),
+  KKIAPAY_PUBLIC_KEY: z.string().optional(),
+  KKIAPAY_PRIVATE_KEY: z.string().optional(),
+  KKIAPAY_SECRET_KEY: z.string().optional(),
+  KKIAPAY_SANDBOX: z.enum(['true', 'false']).optional(),
+  FEDAPAY_SECRET_KEY: z.string().optional(),
+  FEDAPAY_SANDBOX: z.enum(['true', 'false']).optional(),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),

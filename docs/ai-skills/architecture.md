@@ -14,9 +14,14 @@ rk-kit-monorepo/
 │   ├── config/              # @rk-kit/config — Zod-validated env (server/client)
 │   ├── db/                  # @rk-kit/db — Drizzle + pg, migrations, RLS, withTenant
 │   ├── auth/                # @rk-kit/auth — Better Auth config + session helpers
+│   ├── billing/             # @rk-kit/billing — plans, provider detection, subscription helpers
+│   ├── payments-stripe/     # @rk-kit/payments-stripe — Stripe Checkout, Portal, webhooks
+│   ├── payments-kkiapay/    # @rk-kit/payments-kkiapay — KKiapay widget + verify + webhooks
+│   ├── payments-fedapay/    # @rk-kit/payments-fedapay — FedaPay transactions + webhooks
 │   ├── email/               # @rk-kit/email — transactional email (Brevo), server-only
 │   ├── errors/              # @rk-kit/errors — typed errors + HTTP serialization
-│   └── ui/                  # @rk-kit/ui — shadcn-style primitives (Radix + CVA)
+│   ├── ui/                  # @rk-kit/ui — shadcn-style primitives (Radix + CVA)
+│   └── create-rk-kit/       # create-rk-kit CLI — scaffold new projects from this template
 ├── docs/ai-skills/          # this handbook
 ├── scripts/                 # smoke.sh, check-ai-docs.sh
 ├── docker-compose.yml       # postgres (default) + web (profile "app")
@@ -88,6 +93,27 @@ Browser ──GET /dashboard──▶ Nitro/TanStack Start
   migrations connect as the owner role. Two different `DATABASE_URL`s.
 - Fail-safe: without a tenant context, RLS returns **zero rows** — a forgotten
   `withTenant` produces empty results, never a cross-tenant leak.
+
+## Billing and payments
+
+Billing is implemented as a set of optional, provider-specific packages. Each
+provider is activated only by its environment variables, so the app boots even
+when none or only some providers are configured.
+
+| Package | Responsibility | Activation |
+|---|---|---|
+| `@rk-kit/billing` | Provider detection, plans, subscription lifecycle helpers | Always present, no secrets |
+| `@rk-kit/payments-stripe` | Stripe Checkout, Customer Portal, webhooks | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_PRO` |
+| `@rk-kit/payments-kkiapay` | KKiapay widget integration, server-side verification, webhooks | `KKIAPAY_PUBLIC_KEY`, `KKIAPAY_PRIVATE_KEY`, `KKIAPAY_SECRET_KEY` |
+| `@rk-kit/payments-fedapay` | FedaPay transaction creation, callbacks, webhooks | `FEDAPAY_SECRET_KEY` |
+
+The dashboard (`/billing`) reads the available providers from the server and
+renders only the configured payment options. Stripe handles recurring
+subscriptions natively; KKiapay and FedaPay are used for one-time mobile-money
+payments that extend the current subscription period.
+
+Webhook endpoints are exposed under `/api/webhooks/*` and verify provider
+signatures or transaction status before updating local subscription state.
 
 ## Deployment contract
 

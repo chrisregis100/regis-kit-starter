@@ -127,16 +127,16 @@ export function Pricing() {
 
               <ul className="mt-6 space-y-3">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3">
+                  <li key={feature} className="flex items-start gap-3">
                     <Check
                       weight="bold"
                       className={cn(
-                        "h-4 w-4 flex-shrink-0",
+                        "mt-0.5 h-4 w-4 flex-shrink-0",
                         plan.highlighted ? "text-primary-foreground/80" : "text-primary",
                       )}
                       aria-hidden="true"
                     />
-                    <span className="text-sm">{feature}</span>
+                    <span className="text-sm leading-tight">{feature}</span>
                   </li>
                 ))}
               </ul>

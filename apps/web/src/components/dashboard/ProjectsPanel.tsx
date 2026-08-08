@@ -41,7 +41,7 @@ export function ProjectsPanel({ projects }: ProjectsPanelProps) {
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+      <div className="flex items-center justify-between border-b border-border px-4 py-4 md:px-5">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-foreground">Projects</h2>
           <span className="text-xs text-muted-foreground">
@@ -69,7 +69,7 @@ export function ProjectsPanel({ projects }: ProjectsPanelProps) {
       ) : (
         <ul className="divide-y divide-border" role="list">
           {projects.map((project) => (
-            <li key={project.id} className="flex items-center gap-4 px-5 py-3">
+            <li key={project.id} className="flex items-center gap-3 px-4 py-3 md:gap-4 md:px-5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-xs font-semibold text-primary">
                 {project.name.slice(0, 2).toUpperCase()}
               </div>

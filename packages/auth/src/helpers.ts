@@ -14,6 +14,7 @@
  * // Then use: withTenant(organizationId, async (db) => { … })
  * ```
  */
+import { serverEnv } from "@rk-kit/config";
 import { ForbiddenError, UnauthorizedError } from "@rk-kit/errors";
 import {
   asc,
@@ -97,6 +98,32 @@ export async function requireSession(headers: Headers): Promise<AuthSession> {
   const authSession = await getSession(headers);
   if (!authSession) {
     throw new UnauthorizedError("Authentication is required to access this resource.");
+  }
+  return authSession;
+}
+
+/**
+ * Whether the given user is the platform super-admin.
+ *
+ * The admin is designated by the ADMIN_EMAIL environment variable. The check is
+ * case-insensitive and returns false when ADMIN_EMAIL is unset, so the admin
+ * surface stays disabled by default.
+ */
+export function isAdmin(userEmail: string): boolean {
+  const adminEmail = serverEnv.ADMIN_EMAIL;
+  if (!adminEmail) return false;
+  return userEmail.trim().toLowerCase() === adminEmail.trim().toLowerCase();
+}
+
+/**
+ * Returns the authenticated admin session, or throws.
+ *   - not authenticated → UnauthorizedError (401)
+ *   - authenticated but not the platform admin → ForbiddenError (403)
+ */
+export async function requireAdmin(headers: Headers): Promise<AuthSession> {
+  const authSession = await requireSession(headers);
+  if (!isAdmin(authSession.user.email)) {
+    throw new ForbiddenError("Platform administrator access is required.");
   }
   return authSession;
 }
