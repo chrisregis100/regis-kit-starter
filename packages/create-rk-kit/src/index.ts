@@ -35,8 +35,7 @@ interface ProjectConfig {
   github: OAuthProviderConfig;
 }
 
-const TEMPLATE_REPO =
-  process.env["RK_KIT_TEMPLATE_REPO"] ?? "chrisregis100/regis-kit-starter";
+const TEMPLATE_REPO = "chrisregis100/regis-kit-starter";
 
 const EXCLUDED_TOP_LEVEL_DIRS = new Set([
   "node_modules",
@@ -410,9 +409,13 @@ async function cloneRemoteTemplate(targetDir: string): Promise<void> {
 
   try {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn("git", ["clone", "--depth", "1", repoUrl, targetDir], {
-        stdio: "ignore",
-      });
+      const child = spawn(
+        "git",
+        ["clone", "--depth", "1", repoUrl, targetDir],
+        {
+          stdio: "ignore",
+        },
+      );
       child.on("error", reject);
       child.on("close", (code) => {
         if (code === 0) resolve();
@@ -487,7 +490,10 @@ async function waitForPostgres(
     }
   }
 
-  spinner.stop({ message: "PostgreSQL did not become healthy", success: false });
+  spinner.stop({
+    message: "PostgreSQL did not become healthy",
+    success: false,
+  });
   throw new Error("PostgreSQL did not become healthy in time.");
 }
 
