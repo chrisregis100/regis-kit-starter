@@ -30,11 +30,12 @@ never another tenant's data.
 
 | Role | Attributes | Used for | Connection string |
 |---|---|---|---|
-| `rk_kit` (owner) | CREATEROLE, owns tables | migrations (drizzle-kit) | `DATABASE_URL_MIGRATIONS` (CI) / migration-time `DATABASE_URL` |
+| `rk_kit` (owner) | CREATEROLE, owns tables | migrations (drizzle-kit) | `DATABASE_URL_MIGRATIONS` |
 | `app_user` | LOGIN, NOSUPERUSER, **NOBYPASSRLS** | application runtime | runtime `DATABASE_URL` |
 
-`app_user` is created by migration `0001_rls_policies.sql`. Change its password
-in production (secret manager / Render env vars) — never reuse the default.
+For local Docker, `app_user` is created during initial database bootstrap with
+`APP_DB_PASSWORD`; migration `0001_rls_policies.sql` also creates it as a
+fallback for non-Docker databases. Use a secret manager in production.
 
 ⚠️ If the runtime connects as a superuser (e.g. the raw docker-compose
 `postgres` superuser), RLS is silently bypassed. The runtime `DATABASE_URL`
@@ -57,7 +58,7 @@ must point at `app_user`.
 1. Define the table in `packages/db/src/schema/business.ts` (follow `project`).
 2. Export it from `src/schema/index.ts` and `src/index.ts`.
 3. Generate the migration:
-   `cd packages/db && DATABASE_URL=<owner-url> pnpm db:generate --name <name>`
+   `cd packages/db && DATABASE_URL_MIGRATIONS=<owner-url> pnpm db:generate --name <name>`
 4. Create a custom migration for RLS
    (`pnpm db:generate -- --custom --name <name>_rls`) containing:
 
@@ -69,7 +70,7 @@ CREATE POLICY "your_table_tenant_isolation" ON "your_table"
   WITH CHECK ("organizationId" = current_setting('app.current_organization_id', true));
 ```
 
-5. Apply: `DATABASE_URL=<owner-url> pnpm db:migrate`
+5. Apply: `DATABASE_URL_MIGRATIONS=<owner-url> pnpm db:migrate`
 6. Extend `packages/db/tests/rls.test.ts` (or add a sibling test) to cover the
    new table's isolation.
 

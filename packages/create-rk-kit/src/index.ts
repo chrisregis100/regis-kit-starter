@@ -28,6 +28,7 @@ interface ProjectConfig {
   databaseName: string;
   postgresUser: string;
   postgresPassword: string;
+  applicationDatabasePassword: string;
   betterAuthSecret: string;
   betterAuthUrl: string;
   port: number;
@@ -35,7 +36,9 @@ interface ProjectConfig {
   github: OAuthProviderConfig;
 }
 
-const TEMPLATE_REPO = "chrisregis100/regis-kit-starter";
+const DEFAULT_TEMPLATE_REPO = "chrisregis100/regis-kit-starter";
+const configuredTemplateRepo = process.env["RK_KIT_TEMPLATE_REPO"]?.trim();
+const templateRepo = configuredTemplateRepo || DEFAULT_TEMPLATE_REPO;
 
 const EXCLUDED_TOP_LEVEL_DIRS = new Set([
   "node_modules",
@@ -197,6 +200,10 @@ function generateAuthSecret(): string {
   return randomBytes(32).toString("base64");
 }
 
+function generateDatabasePassword(): string {
+  return randomBytes(24).toString("hex");
+}
+
 function findLocalTemplateRoot(): string | undefined {
   const currentFile = fileURLToPath(import.meta.url);
   const candidateRoot = resolve(currentFile, "../../../..");
@@ -290,6 +297,7 @@ async function promptProjectConfig(
     databaseName,
     postgresUser,
     postgresPassword,
+    applicationDatabasePassword: generateDatabasePassword(),
     betterAuthSecret: generateAuthSecret(),
     betterAuthUrl: `http://localhost:${parsedPort}`,
     port: parsedPort,
@@ -306,9 +314,12 @@ function buildEnvFile(config: ProjectConfig): string {
     `POSTGRES_USER=${config.postgresUser}`,
     `POSTGRES_PASSWORD=${config.postgresPassword}`,
     `POSTGRES_DB=${config.databaseName}`,
+    `APP_DB_PASSWORD=${config.applicationDatabasePassword}`,
     "",
-    "# Connection string used by Drizzle + Better Auth",
-    `DATABASE_URL=postgresql://${config.postgresUser}:${config.postgresPassword}@localhost:5432/${config.databaseName}`,
+    "# Restricted runtime connection (RLS enforced)",
+    `DATABASE_URL=postgresql://app_user:${config.applicationDatabasePassword}@localhost:5432/${config.databaseName}`,
+    "# Privileged owner connection used only by drizzle-kit migrations",
+    `DATABASE_URL_MIGRATIONS=postgresql://${config.postgresUser}:${config.postgresPassword}@localhost:5432/${config.databaseName}`,
     "",
     "# ─────────────────────────────────────────────",
     "# Better Auth",
@@ -403,9 +414,9 @@ async function copyLocalTemplate(
 }
 
 async function cloneRemoteTemplate(targetDir: string): Promise<void> {
-  const repoUrl = `https://github.com/${TEMPLATE_REPO}.git`;
+  const repoUrl = `https://github.com/${templateRepo}.git`;
   const spinner = new Spinner();
-  spinner.start(`Downloading template from ${TEMPLATE_REPO}...`);
+  spinner.start(`Downloading template from ${templateRepo}...`);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -430,7 +441,9 @@ async function cloneRemoteTemplate(targetDir: string): Promise<void> {
 }
 
 async function installTemplate(targetDir: string): Promise<void> {
-  const localRoot = findLocalTemplateRoot();
+  const localRoot = configuredTemplateRepo
+    ? undefined
+    : findLocalTemplateRoot();
 
   if (localRoot) {
     await copyLocalTemplate(localRoot, targetDir);
@@ -441,7 +454,7 @@ async function installTemplate(targetDir: string): Promise<void> {
     await cloneRemoteTemplate(targetDir);
   } catch (error) {
     throw new Error(
-      `Failed to download template from ${TEMPLATE_REPO}. ` +
+      `Failed to download template from ${templateRepo}. ` +
         `Check that the repository is public and accessible, ` +
         `or run the installer from inside the RK Kit monorepo.\n` +
         `Original error: ${error instanceof Error ? error.message : String(error)}`,
