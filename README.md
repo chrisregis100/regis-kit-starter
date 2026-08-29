@@ -1,7 +1,7 @@
 # RK Kit — Ship your SaaS in days, not months
 
 [![Version](https://img.shields.io/npm/v/create-rk-kit)](https://www.npmjs.com/package/create-rk-kit)
-[![License](https://img.shields.io/github/license/rk-kit/regis-kit-starter)](LICENSE)
+[![License](https://img.shields.io/github/license/chrisregis100/regis-kit-starter)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%3E%3D22-339933)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6)
 
@@ -139,7 +139,7 @@ cd my-saas
 pnpm dev              # http://localhost:3000
 ```
 
-> The CLI uses the GitHub repository `rk-kit/regis-kit-starter` by default. If you are working from a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable before running the installer:
+> The CLI uses the GitHub repository `chrisregis100/regis-kit-starter` by default. If you are working from a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable before running the installer:
 >
 > ```bash
 > RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
@@ -159,7 +159,7 @@ openssl rand -base64 32
 
 # 3. Copy and edit the environment file
 cp .env.example .env
-# Edit .env: paste the secret, set DATABASE_URL, configure optional OAuth providers.
+# Edit .env: paste the secret and configure optional OAuth providers.
 
 # 4. Install dependencies and build shared packages
 pnpm install
@@ -195,14 +195,16 @@ These are used only by `docker-compose.yml` to create the local database:
 
 | Variable | Default | Description |
 |---|---|---|
-| `POSTGRES_USER` | `rk_kit` | Database owner |
-| `POSTGRES_PASSWORD` | `rk_kit_secret` | Database password |
+| `POSTGRES_USER` | `rk_kit` | Privileged database owner used for migrations |
+| `POSTGRES_PASSWORD` | `rk_kit_secret` | Database owner password |
 | `POSTGRES_DB` | `rk_kit_dev` | Database name |
+| `APP_DB_PASSWORD` | `rk_kit_app_secret` | Restricted `app_user` password |
 
-Make sure `DATABASE_URL` matches these credentials, e.g.:
+The app and migration tooling intentionally use separate credentials:
 
 ```bash
-DATABASE_URL=postgresql://rk_kit:rk_kit_secret@localhost:5432/rk_kit_dev
+DATABASE_URL=postgresql://app_user:rk_kit_app_secret@localhost:5432/rk_kit_dev
+DATABASE_URL_MIGRATIONS=postgresql://rk_kit:rk_kit_secret@localhost:5432/rk_kit_dev
 ```
 
 ### OAuth providers (optional)
@@ -270,7 +272,7 @@ Webhook endpoints to register:
 When running the full production image via `docker compose --profile app up`, Compose injects the following defaults if they are not set:
 
 ```bash
-DATABASE_URL_DOCKER=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+DATABASE_URL_DOCKER=postgresql://app_user:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
 BETTER_AUTH_URL=http://localhost:3000
 PORT=3000
 HOST=0.0.0.0
@@ -288,6 +290,9 @@ RK Kit uses **Drizzle ORM** for schema management and **PostgreSQL Row-Level Sec
 # Dev database on :5432 with persistent volume
 docker compose up -d
 ```
+
+On first initialization, Compose creates the non-superuser `app_user` runtime
+role. The application connects as this role so PostgreSQL enforces RLS.
 
 ### Apply migrations
 
@@ -307,7 +312,7 @@ pnpm --filter @rk-kit/db db:generate
 pnpm --filter @rk-kit/db db:studio
 ```
 
-> ⚠️ **RLS note**: the runtime `DATABASE_URL` should connect as the restricted `app_user` role (created by the RLS migration), not as the postgres superuser — superusers bypass row-level security. See [docs/ai-skills/data-access.md](docs/ai-skills/data-access.md).
+> ⚠️ **RLS note**: the runtime `DATABASE_URL` must connect as the restricted `app_user` role, not as the PostgreSQL owner — superusers bypass row-level security. Use `DATABASE_URL_MIGRATIONS` only for migrations. See [docs/ai-skills/data-access.md](docs/ai-skills/data-access.md).
 
 ## Development workflow
 
@@ -384,13 +389,14 @@ The production image is defined in [`apps/web/Dockerfile`](apps/web/Dockerfile).
 ### Database connection errors
 
 1. Verify PostgreSQL is running: `docker compose ps`
-2. Verify `DATABASE_URL` matches `POSTGRES_*` values in `.env`
+2. Verify `DATABASE_URL` uses `app_user` and `APP_DB_PASSWORD` from `.env`
 3. Check the database is reachable: `pg_isready -h localhost -p 5432`
-4. If you changed `POSTGRES_*` after the first `docker compose up`, the volume still contains the old credentials. Either update `DATABASE_URL` or prune the volume (`docker compose down -v` — this destroys data).
+4. If you changed `POSTGRES_*` or `APP_DB_PASSWORD` after the first `docker compose up`, the volume still contains the old credentials. Either restore the original values or prune the volume (`docker compose down -v` — this destroys data).
 
 ### Migrations fail
 
-Ensure the database is reachable and that `DATABASE_URL` is correct, then run:
+Ensure the database is reachable and that `DATABASE_URL_MIGRATIONS` uses the
+owner credentials, then run:
 
 ```bash
 pnpm --filter @rk-kit/db db:migrate
