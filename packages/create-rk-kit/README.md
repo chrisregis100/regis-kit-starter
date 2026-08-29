@@ -69,7 +69,7 @@ During setup you will be asked for:
 | ------------------- | --------------------- | -------------------------------------- |
 | Database name       | `my-saas` → `my_saas` | PostgreSQL database name               |
 | PostgreSQL user     | `rk_kit`              | Database owner                         |
-| PostgreSQL password | `rk_kit_secret`       | Database password                      |
+| PostgreSQL password | `rk_kit_secret`       | Database owner password                |
 | App port            | `3000`                | Port for the TanStack Start dev server |
 | Google OAuth        | disabled              | Optional social login                  |
 | GitHub OAuth        | disabled              | Optional social login                  |
@@ -81,7 +81,9 @@ OAuth providers can also be configured later by editing `.env`.
 The installer writes a root `.env` file with the following variables already filled in:
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
-- `DATABASE_URL`
+- `APP_DB_PASSWORD` (securely generated for the restricted runtime role)
+- `DATABASE_URL` (restricted `app_user` runtime connection)
+- `DATABASE_URL_MIGRATIONS` (privileged owner connection)
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (if enabled)
