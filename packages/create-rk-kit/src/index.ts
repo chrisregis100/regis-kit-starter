@@ -68,6 +68,7 @@ const color = {
 
 const isInteractive = process.stdout.isTTY && !process.env.CI;
 let readlineInterface: ReadlineInterface | undefined;
+let nonInteractiveAnswers: string[] | undefined;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -228,14 +229,21 @@ function findLocalTemplateRoot(): string | undefined {
 }
 
 async function prompt(message: string, defaultValue?: string): Promise<string> {
+  const promptText = defaultValue
+    ? `${message} (${color.gray(defaultValue)}): `
+    : `${message}: `;
+
+  if (!process.stdin.isTTY) {
+    nonInteractiveAnswers ??= readFileSync(0, "utf8").split(/\r?\n/);
+    process.stdout.write(promptText);
+    const answer = nonInteractiveAnswers.shift() ?? "";
+    return answer.trim() || defaultValue || "";
+  }
+
   readlineInterface ??= createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-
-  const promptText = defaultValue
-    ? `${message} (${color.gray(defaultValue)}): `
-    : `${message}: `;
 
   const answer = await readlineInterface.question(promptText);
   return answer.trim() || defaultValue || "";
