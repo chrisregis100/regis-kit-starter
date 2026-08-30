@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * @rk-kit/ui
  *
