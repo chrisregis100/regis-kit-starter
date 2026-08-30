@@ -42,7 +42,7 @@ Most SaaS projects waste the first two weeks on the same boilerplate: auth flow,
 
 ## Stack
 
-- **Framework**: [TanStack Start](https://tanstack.com/start/)
+- **Framework**: [TanStack Start](https://tanstack.com/start/) (default) or [Next.js App Router](https://nextjs.org/docs/app)
 - **Auth**: [Better Auth](https://www.better-auth.com/)
 - **Email**: [Brevo](https://www.brevo.com/) transactional API (`@getbrevo/brevo`)
 - **Database**: PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/) + RLS
@@ -60,10 +60,14 @@ npx create-rk-kit@latest my-saas
 pnpm dlx create-rk-kit@latest my-saas
 ```
 
-The CLI asks for your project name, database credentials, and optional OAuth providers, then installs dependencies, starts PostgreSQL, and applies migrations automatically.
+The first prompt selects TanStack Start (default) or Next.js App Router. The
+remaining prompts configure the database name and intended OAuth providers.
 
 ```bash
 cd my-saas
+pnpm install
+docker compose up -d
+pnpm --filter @rk-kit/db db:migrate
 pnpm dev
 ```
 
@@ -108,7 +112,8 @@ All commands below are run from the repository root unless stated otherwise.
 
 ### CLI installer (recommended)
 
-The `create-rk-kit` CLI scaffolds a new project and runs an interactive configuration wizard so every environment value is set before the server starts.
+The `create-rk-kit` CLI scaffolds the same RK Kit monorepo with either a
+TanStack Start or Next.js App Router web shell.
 
 ```bash
 # npm
@@ -123,19 +128,20 @@ yarn create rk-kit my-saas
 
 The installer performs the following steps automatically:
 
-1. Copies the RK Kit monorepo template into a new directory (`my-saas`).
-2. Asks for the project name, database name, and database credentials.
-3. Generates a secure `BETTER_AUTH_SECRET`.
-4. Optionally configures Google and GitHub OAuth.
-5. Writes a ready-to-use `.env` file.
-6. Runs `pnpm install` and builds the shared packages.
-7. Starts PostgreSQL via Docker Compose and applies migrations.
-8. Prints the local URL and next commands.
+1. Asks for the app framework first (TanStack Start is the default).
+2. Asks for a project name only when it is omitted from the command.
+3. Asks for the database name and intended OAuth providers.
+4. Copies the monorepo and activates the selected `apps/web` shell.
+5. Generates a secure `BETTER_AUTH_SECRET` and writes `.env`.
+6. Prints the next commands.
 
 After the installer finishes:
 
 ```bash
 cd my-saas
+pnpm install
+docker compose up -d
+pnpm --filter @rk-kit/db db:migrate
 pnpm dev              # http://localhost:3000
 ```
 
@@ -144,6 +150,9 @@ pnpm dev              # http://localhost:3000
 > ```bash
 > RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
 > ```
+>
+> The override must contain `templates/nextjs-app-router` to support the
+> Next.js selection.
 
 ### Manual install
 
@@ -317,7 +326,7 @@ pnpm --filter @rk-kit/db db:studio
 ## Development workflow
 
 ```bash
-pnpm dev                  # Start dev servers via Turbo (TanStack Start on :3000)
+pnpm dev                  # Start the selected web framework on :3000
 pnpm build                # Build the web app and shared packages
 pnpm lint                 # Run linters across the workspace
 pnpm typecheck            # Run TypeScript checks across the workspace
@@ -420,10 +429,11 @@ bash scripts/smoke.sh
 ## Project architecture
 
 ```
-apps/web                  product app (TanStack Start) — customize freely
+apps/web                  selected product shell (TanStack Start or Next.js)
 apps/web/src/services     business logic (Drizzle via withTenant)
-apps/web/src/server       TanStack Start server functions (front RPC boundary)
+apps/web/src/server       TanStack Start server functions (TanStack variant)
 apps/web/src/api          REST handlers + middleware for /api/v1/*
+templates/nextjs-app-router Next.js App Router shell used by create-rk-kit
 packages/config           Zod-validated environment
 packages/db               Drizzle + migrations + RLS + withTenant
 packages/auth             Better Auth + session helpers
