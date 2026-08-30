@@ -82,7 +82,7 @@ export function ProviderSelector({
       kkiapay.openKkiapayWidget?.({
         amount: String(amount),
         key: publicKey,
-        sandbox: provider.publicConfig?.sandbox,
+        sandbox: provider?.publicConfig?.sandbox,
         position: "center",
         data: JSON.stringify({ plan: "pro" }),
       });

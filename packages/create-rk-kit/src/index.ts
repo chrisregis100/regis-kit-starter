@@ -498,7 +498,10 @@ async function copyFrameworkSharedFiles(
 
     await cp(sourcePath, join(stagingDir, relativePath), {
       recursive: true,
-      filter: (path) => !path.endsWith(".test.ts") && !path.endsWith(".test.tsx"),
+      filter: (path) =>
+        !path.endsWith(".test.ts") &&
+        !path.endsWith(".test.tsx") &&
+        !path.endsWith("auth-providers-service.ts"),
     });
   }
 }
