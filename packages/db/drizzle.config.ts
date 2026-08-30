@@ -16,7 +16,7 @@ config({ path: resolve(__dirname, "../../.env") });
  *
  * Role note: use the superuser/owner role for migrations (BYPASSRLS is needed
  * to apply ALTER TABLE … ENABLE ROW LEVEL SECURITY). The application role
- * `app_user` is a restricted role created by migration 0002_rls_policies.sql.
+ * `app_user` is a restricted role created by migration 0001_rls_policies.sql.
  */
 export default {
   schema: "./src/schema/index.ts",
@@ -24,6 +24,9 @@ export default {
   dialect: "postgresql",
   dbCredentials: {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    url: process.env["DATABASE_URL"] ?? "",
+    url:
+      process.env["DATABASE_URL_MIGRATIONS"] ??
+      process.env["DATABASE_URL"] ??
+      "",
   },
 } satisfies Config;

@@ -39,7 +39,7 @@ Read **[frontend-design.md](./frontend-design.md)** before touching any landing 
 cp .env.example .env       # fill BETTER_AUTH_SECRET (openssl rand -base64 32)
 docker compose up -d       # PostgreSQL 17 on :5432
 pnpm install
-pnpm --filter @rk-kit/db db:migrate   # uses DATABASE_URL from .env
+pnpm --filter @rk-kit/db db:migrate   # uses DATABASE_URL_MIGRATIONS from .env
 pnpm dev                   # TanStack Start dev server on :3000
 ```
 
