@@ -9,7 +9,10 @@ import {
 } from "node:fs";
 import { cp } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
+import {
+  createInterface,
+  type Interface as ReadlineInterface,
+} from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 interface CliOptions {
@@ -64,6 +67,7 @@ const color = {
 };
 
 const isInteractive = process.stdout.isTTY && !process.env.CI;
+let readlineInterface: ReadlineInterface | undefined;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -224,7 +228,7 @@ function findLocalTemplateRoot(): string | undefined {
 }
 
 async function prompt(message: string, defaultValue?: string): Promise<string> {
-  const rl = createInterface({
+  readlineInterface ??= createInterface({
     input: process.stdin,
     output: process.stdout,
   });
@@ -233,12 +237,8 @@ async function prompt(message: string, defaultValue?: string): Promise<string> {
     ? `${message} (${color.gray(defaultValue)}): `
     : `${message}: `;
 
-  try {
-    const answer = await rl.question(promptText);
-    return answer.trim() || defaultValue || "";
-  } finally {
-    rl.close();
-  }
+  const answer = await readlineInterface.question(promptText);
+  return answer.trim() || defaultValue || "";
 }
 
 async function promptFramework(): Promise<AppFramework> {
@@ -567,4 +567,6 @@ main().catch((error: unknown) => {
     color.red(error instanceof Error ? error.message : String(error)),
   );
   process.exit(1);
+}).finally(() => {
+  readlineInterface?.close();
 });
