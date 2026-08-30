@@ -39,7 +39,6 @@ export async function selectOrganization(organizationId: string): Promise<void> 
   }
 
   await setSessionActiveOrganization(authSession.session.token, organizationId);
-  redirect("/dashboard");
 }
 
 export async function createProjectAction(input: {
@@ -102,9 +101,11 @@ export async function createStripePortalAction(
 export async function createKkiapayPaymentAction(): Promise<{
   amount: number;
   currency: string;
+  organizationId: string;
 }> {
   const { organizationId } = await requireOrganization(await getRequestHeaders());
-  return createKkiapayPayment(organizationId, Plan.PRO);
+  const payment = await createKkiapayPayment(organizationId, Plan.PRO);
+  return { ...payment, organizationId };
 }
 
 export async function verifyKkiapayTransactionAction(

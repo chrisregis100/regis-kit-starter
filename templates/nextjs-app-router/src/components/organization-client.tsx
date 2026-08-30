@@ -19,12 +19,14 @@ import { authClient } from "../lib/auth-client";
 import { Logo } from "./logo";
 
 interface OrganizationClientProps {
+  initialInvitationId?: string;
   mode: "onboarding" | "select";
   organizations?: UserOrganization[];
   userName?: string;
 }
 
 export function OrganizationClient({
+  initialInvitationId = "",
   mode,
   organizations = [],
   userName = "",
@@ -32,8 +34,8 @@ export function OrganizationClient({
   const router = useRouter();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [invitationId, setInvitationId] = useState("");
-  const [isJoining, setIsJoining] = useState(false);
+  const [invitationId, setInvitationId] = useState(initialInvitationId);
+  const [isJoining, setIsJoining] = useState(Boolean(initialInvitationId));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +82,8 @@ export function OrganizationClient({
     setIsLoading(true);
     try {
       await selectOrganization(organizationId);
+      router.push("/dashboard");
+      router.refresh();
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not open workspace.");
       setIsLoading(false);

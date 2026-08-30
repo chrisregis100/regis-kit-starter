@@ -22,7 +22,7 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "drizzle-kit migrate && node sync-app-user-password.mjs",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push"
   },

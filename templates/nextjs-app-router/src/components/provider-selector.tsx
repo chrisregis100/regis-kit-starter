@@ -76,7 +76,7 @@ export function ProviderSelector({
       const publicKey = provider?.publicConfig?.publicKey;
       if (typeof publicKey !== "string") throw new Error("KKiapay is not configured.");
 
-      const { amount } = await createKkiapayPaymentAction();
+      const { amount, organizationId } = await createKkiapayPaymentAction();
       await loadKkiapay();
       const kkiapay = window as KkiapayWindow;
       kkiapay.openKkiapayWidget?.({
@@ -84,7 +84,7 @@ export function ProviderSelector({
         key: publicKey,
         sandbox: provider?.publicConfig?.sandbox,
         position: "center",
-        data: JSON.stringify({ plan: "pro" }),
+        data: JSON.stringify({ organizationId, plan: "pro" }),
       });
       kkiapay.addSuccessListener?.(async (response) => {
         const requestData = response.requestData as Record<string, unknown> | undefined;
