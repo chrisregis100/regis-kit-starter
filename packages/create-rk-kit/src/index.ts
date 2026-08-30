@@ -538,7 +538,6 @@ async function applyFrameworkTemplate(
 
 function showNextSteps(projectName: string, targetDir: string): void {
   const cdCommand = `cd ${projectName}`;
-  const devCommand = "pnpm dev";
 
   console.log();
   console.log(color.green("Project ready:"), targetDir);
@@ -549,11 +548,15 @@ function showNextSteps(projectName: string, targetDir: string): void {
   console.log("  1. Move into your project folder:");
   console.log(`     ${color.cyan(cdCommand)}`);
   console.log();
-  console.log("  2. Start the development server:");
-  console.log(`     ${color.cyan(devCommand)}`);
+  console.log("  2. Install dependencies:");
+  console.log(`     ${color.cyan("pnpm install")}`);
   console.log();
-  console.log("  Or run both at once:");
-  console.log(`     ${color.cyan(`${cdCommand} && ${devCommand}`)}`);
+  console.log("  3. Start PostgreSQL and apply migrations:");
+  console.log(`     ${color.cyan("docker compose up -d")}`);
+  console.log(`     ${color.cyan("pnpm --filter @rk-kit/db db:migrate")}`);
+  console.log();
+  console.log("  4. Start the development server:");
+  console.log(`     ${color.cyan("pnpm dev")}`);
   console.log(color.cyan("─────────────────────────────────────────────"));
   console.log();
 }
