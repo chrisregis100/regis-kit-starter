@@ -19,9 +19,14 @@ WORKDIR /repo
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/auth/package.json packages/auth/
+COPY packages/billing/package.json packages/billing/
 COPY packages/config/package.json packages/config/
 COPY packages/db/package.json packages/db/
+COPY packages/email/package.json packages/email/
 COPY packages/errors/package.json packages/errors/
+COPY packages/payments-fedapay/package.json packages/payments-fedapay/
+COPY packages/payments-kkiapay/package.json packages/payments-kkiapay/
+COPY packages/payments-stripe/package.json packages/payments-stripe/
 COPY packages/ui/package.json packages/ui/
 RUN pnpm install --frozen-lockfile
 

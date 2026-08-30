@@ -1,4 +1,4 @@
-import { execSync, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import {
   existsSync,
@@ -9,13 +9,18 @@ import {
 } from "node:fs";
 import { cp } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
+import {
+  createInterface,
+  type Interface as ReadlineInterface,
+} from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 interface CliOptions {
   projectName: string;
   targetDir: string;
 }
+
+type AppFramework = "tanstack-start" | "nextjs-app-router";
 
 interface OAuthProviderConfig {
   enabled: boolean;
@@ -24,10 +29,12 @@ interface OAuthProviderConfig {
 }
 
 interface ProjectConfig {
+  framework: AppFramework;
   projectName: string;
   databaseName: string;
   postgresUser: string;
   postgresPassword: string;
+  applicationDatabasePassword: string;
   betterAuthSecret: string;
   betterAuthUrl: string;
   port: number;
@@ -35,7 +42,9 @@ interface ProjectConfig {
   github: OAuthProviderConfig;
 }
 
-const TEMPLATE_REPO = "chrisregis100/regis-kit-starter";
+const DEFAULT_TEMPLATE_REPO = "chrisregis100/regis-kit-starter";
+const configuredTemplateRepo = process.env["RK_KIT_TEMPLATE_REPO"]?.trim();
+const templateRepo = configuredTemplateRepo || DEFAULT_TEMPLATE_REPO;
 
 const EXCLUDED_TOP_LEVEL_DIRS = new Set([
   "node_modules",
@@ -48,6 +57,7 @@ const EXCLUDED_TOP_LEVEL_DIRS = new Set([
 ]);
 
 const EXCLUDED_TOP_LEVEL_FILES = new Set([".env"]);
+const NEXTJS_TEMPLATE_PATH = join("templates", "nextjs-app-router");
 
 const color = {
   red: (text: string) => `\x1b[31m${text}\x1b[0m`,
@@ -57,6 +67,8 @@ const color = {
 };
 
 const isInteractive = process.stdout.isTTY && !process.env.CI;
+let readlineInterface: ReadlineInterface | undefined;
+let nonInteractiveAnswers: string[] | undefined;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -171,12 +183,9 @@ function logStep(message: string): void {
   console.log(color.cyan("→"), message);
 }
 
-function parseArguments(): CliOptions {
-  const projectName = process.argv[2];
-
-  if (!projectName) {
-    exitWithError("Usage: create-rk-kit <project-name>");
-  }
+async function parseArguments(): Promise<CliOptions> {
+  const projectName =
+    process.argv[2] ?? (await prompt("Project name", "my-saas"));
 
   if (!/^[a-z0-9_-]+$/i.test(projectName)) {
     exitWithError(
@@ -197,6 +206,10 @@ function generateAuthSecret(): string {
   return randomBytes(32).toString("base64");
 }
 
+function generateDatabasePassword(): string {
+  return randomBytes(24).toString("hex");
+}
+
 function findLocalTemplateRoot(): string | undefined {
   const currentFile = fileURLToPath(import.meta.url);
   const candidateRoot = resolve(currentFile, "../../../..");
@@ -215,81 +228,88 @@ function findLocalTemplateRoot(): string | undefined {
   }
 }
 
-function runCommand(command: string, cwd: string): void {
-  execSync(command, { cwd, stdio: "inherit" });
-}
-
 async function prompt(message: string, defaultValue?: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
   const promptText = defaultValue
     ? `${message} (${color.gray(defaultValue)}): `
     : `${message}: `;
 
-  try {
-    const answer = await rl.question(promptText);
+  if (!process.stdin.isTTY) {
+    nonInteractiveAnswers ??= readFileSync(0, "utf8").split(/\r?\n/);
+    process.stdout.write(promptText);
+    const answer = nonInteractiveAnswers.shift() ?? "";
     return answer.trim() || defaultValue || "";
-  } finally {
-    rl.close();
   }
+
+  readlineInterface ??= createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const answer = await readlineInterface.question(promptText);
+  return answer.trim() || defaultValue || "";
 }
 
-async function promptConfirm(
-  message: string,
-  defaultValue = false,
-): Promise<boolean> {
-  const suffix = defaultValue ? " [Y/n]" : " [y/N]";
-  const answer = await prompt(`${message}${suffix}`, defaultValue ? "Y" : "N");
-  const normalized = answer.toLowerCase().trim();
-  return normalized === "y" || normalized === "yes";
+async function promptFramework(): Promise<AppFramework> {
+  console.log("  1. TanStack Start (default)");
+  console.log("  2. Next.js App Router");
+  const answer = await prompt("App framework", "1");
+  const normalized = answer.toLowerCase();
+
+  if (normalized === "1" || normalized === "tanstack" || normalized === "tanstack-start") {
+    return "tanstack-start";
+  }
+  if (normalized === "2" || normalized === "next" || normalized === "nextjs") {
+    return "nextjs-app-router";
+  }
+
+  exitWithError("App framework must be 1 (TanStack Start) or 2 (Next.js App Router).");
 }
 
-async function promptOAuthProvider(name: string): Promise<OAuthProviderConfig> {
-  const enabled = await promptConfirm(`Enable ${name} OAuth?`, false);
-
-  if (!enabled) return { enabled: false, clientId: "", clientSecret: "" };
-
-  const clientId = await prompt(
-    `${name} Client ID`,
-    "leave empty to configure later",
+async function promptOAuthProviders(): Promise<{
+  google: OAuthProviderConfig;
+  github: OAuthProviderConfig;
+}> {
+  const answer = await prompt(
+    "OAuth providers to configure (none, google, github, or both)",
+    "none",
   );
-  const clientSecret = await prompt(
-    `${name} Client Secret`,
-    "leave empty to configure later",
-  );
+  const normalized = answer.toLowerCase().replace(/\s+/g, "");
+  const isGoogleEnabled = normalized === "google" || normalized === "both";
+  const isGithubEnabled = normalized === "github" || normalized === "both";
+
+  if (
+    normalized !== "none" &&
+    normalized !== "google" &&
+    normalized !== "github" &&
+    normalized !== "both"
+  ) {
+    exitWithError("OAuth providers must be none, google, github, or both.");
+  }
 
   return {
-    enabled: true,
-    clientId: clientId === "leave empty to configure later" ? "" : clientId,
-    clientSecret:
-      clientSecret === "leave empty to configure later" ? "" : clientSecret,
+    google: { enabled: isGoogleEnabled, clientId: "", clientSecret: "" },
+    github: { enabled: isGithubEnabled, clientId: "", clientSecret: "" },
   };
 }
 
 async function promptProjectConfig(
   projectName: string,
+  framework: AppFramework,
 ): Promise<ProjectConfig> {
   const databaseName = await prompt(
     "Database name",
     projectName.replace(/-/g, "_"),
   );
-  const postgresUser = await prompt("PostgreSQL user", "rk_kit");
-  const postgresPassword = await prompt("PostgreSQL password", "rk_kit_secret");
-  const port = await prompt("App port", "3000");
-
-  const google = await promptOAuthProvider("Google");
-  const github = await promptOAuthProvider("GitHub");
-
-  const parsedPort = Number(port) || 3000;
+  const { google, github } = await promptOAuthProviders();
+  const parsedPort = 3000;
 
   return {
+    framework,
     projectName,
     databaseName,
-    postgresUser,
-    postgresPassword,
+    postgresUser: "rk_kit",
+    postgresPassword: "rk_kit_secret",
+    applicationDatabasePassword: generateDatabasePassword(),
     betterAuthSecret: generateAuthSecret(),
     betterAuthUrl: `http://localhost:${parsedPort}`,
     port: parsedPort,
@@ -306,9 +326,12 @@ function buildEnvFile(config: ProjectConfig): string {
     `POSTGRES_USER=${config.postgresUser}`,
     `POSTGRES_PASSWORD=${config.postgresPassword}`,
     `POSTGRES_DB=${config.databaseName}`,
+    `APP_DB_PASSWORD=${config.applicationDatabasePassword}`,
     "",
-    "# Connection string used by Drizzle + Better Auth",
-    `DATABASE_URL=postgresql://${config.postgresUser}:${config.postgresPassword}@localhost:5432/${config.databaseName}`,
+    "# Restricted runtime connection (RLS enforced)",
+    `DATABASE_URL=postgresql://app_user:${config.applicationDatabasePassword}@localhost:5432/${config.databaseName}`,
+    "# Privileged owner connection used only by drizzle-kit migrations",
+    `DATABASE_URL_MIGRATIONS=postgresql://${config.postgresUser}:${config.postgresPassword}@localhost:5432/${config.databaseName}`,
     "",
     "# ─────────────────────────────────────────────",
     "# Better Auth",
@@ -358,7 +381,7 @@ function buildEnvFile(config: ProjectConfig): string {
     "LINKEDIN_CLIENT_SECRET=",
     "",
     "# ─────────────────────────────────────────────",
-    "# App (TanStack Start)",
+    `# App (${config.framework === "tanstack-start" ? "TanStack Start" : "Next.js App Router"})`,
     "# NOTE: Render deployment → bind to 0.0.0.0:$PORT",
     "# ─────────────────────────────────────────────",
     `PORT=${config.port}`,
@@ -370,7 +393,12 @@ function buildEnvFile(config: ProjectConfig): string {
 }
 
 function writeEnvFile(targetDir: string, config: ProjectConfig): void {
-  writeFileSync(join(targetDir, ".env"), buildEnvFile(config), "utf8");
+  const envFile = buildEnvFile(config);
+  writeFileSync(join(targetDir, ".env"), envFile, "utf8");
+
+  if (config.framework === "nextjs-app-router") {
+    writeFileSync(join(targetDir, "apps", "web", ".env.local"), envFile, "utf8");
+  }
 }
 
 async function copyLocalTemplate(
@@ -403,9 +431,9 @@ async function copyLocalTemplate(
 }
 
 async function cloneRemoteTemplate(targetDir: string): Promise<void> {
-  const repoUrl = `https://github.com/${TEMPLATE_REPO}.git`;
+  const repoUrl = `https://github.com/${templateRepo}.git`;
   const spinner = new Spinner();
-  spinner.start(`Downloading template from ${TEMPLATE_REPO}...`);
+  spinner.start(`Downloading template from ${templateRepo}...`);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -430,7 +458,9 @@ async function cloneRemoteTemplate(targetDir: string): Promise<void> {
 }
 
 async function installTemplate(targetDir: string): Promise<void> {
-  const localRoot = findLocalTemplateRoot();
+  const localRoot = configuredTemplateRepo
+    ? undefined
+    : findLocalTemplateRoot();
 
   if (localRoot) {
     await copyLocalTemplate(localRoot, targetDir);
@@ -441,7 +471,7 @@ async function installTemplate(targetDir: string): Promise<void> {
     await cloneRemoteTemplate(targetDir);
   } catch (error) {
     throw new Error(
-      `Failed to download template from ${TEMPLATE_REPO}. ` +
+      `Failed to download template from ${templateRepo}. ` +
         `Check that the repository is public and accessible, ` +
         `or run the installer from inside the RK Kit monorepo.\n` +
         `Original error: ${error instanceof Error ? error.message : String(error)}`,
@@ -449,9 +479,65 @@ async function installTemplate(targetDir: string): Promise<void> {
   }
 }
 
+async function copyFrameworkSharedFiles(
+  sourceWebDir: string,
+  stagingDir: string,
+): Promise<void> {
+  const pathsToCopy = [
+    "public",
+    join("src", "api"),
+    join("src", "services"),
+    join("src", "styles"),
+    join("src", "lib", "auth-client.ts"),
+    join("src", "components", "auth"),
+  ];
+
+  for (const relativePath of pathsToCopy) {
+    const sourcePath = join(sourceWebDir, relativePath);
+    if (!existsSync(sourcePath)) continue;
+
+    await cp(sourcePath, join(stagingDir, relativePath), {
+      recursive: true,
+      filter: (path) =>
+        !path.endsWith(".test.ts") &&
+        !path.endsWith(".test.tsx") &&
+        !path.endsWith("auth-providers-service.ts"),
+    });
+  }
+}
+
+async function applyFrameworkTemplate(
+  targetDir: string,
+  framework: AppFramework,
+): Promise<void> {
+  const templatesDir = join(targetDir, "templates");
+
+  if (framework === "tanstack-start") {
+    rmSync(templatesDir, { recursive: true, force: true });
+    return;
+  }
+
+  const nextTemplateDir = join(targetDir, NEXTJS_TEMPLATE_PATH);
+  if (!existsSync(nextTemplateDir)) {
+    throw new Error(
+      `The selected template repository (${templateRepo}) does not contain ${NEXTJS_TEMPLATE_PATH}.`,
+    );
+  }
+
+  const webDir = join(targetDir, "apps", "web");
+  const stagingDir = join(targetDir, ".rk-kit-web-shared");
+  mkdirSync(stagingDir, { recursive: true });
+  await copyFrameworkSharedFiles(webDir, stagingDir);
+
+  rmSync(webDir, { recursive: true, force: true });
+  await cp(nextTemplateDir, webDir, { recursive: true });
+  await cp(stagingDir, webDir, { recursive: true });
+  rmSync(stagingDir, { recursive: true, force: true });
+  rmSync(templatesDir, { recursive: true, force: true });
+}
+
 function showNextSteps(projectName: string, targetDir: string): void {
   const cdCommand = `cd ${projectName}`;
-  const devCommand = "pnpm dev";
 
   console.log();
   console.log(color.green("Project ready:"), targetDir);
@@ -462,88 +548,30 @@ function showNextSteps(projectName: string, targetDir: string): void {
   console.log("  1. Move into your project folder:");
   console.log(`     ${color.cyan(cdCommand)}`);
   console.log();
-  console.log("  2. Start the development server:");
-  console.log(`     ${color.cyan(devCommand)}`);
+  console.log("  2. Install dependencies:");
+  console.log(`     ${color.cyan("pnpm install")}`);
   console.log();
-  console.log("  Or run both at once:");
-  console.log(`     ${color.cyan(`${cdCommand} && ${devCommand}`)}`);
+  console.log("  3. Start PostgreSQL and apply migrations:");
+  console.log(`     ${color.cyan("docker compose up -d")}`);
+  console.log(`     ${color.cyan("pnpm --filter @rk-kit/db db:migrate")}`);
+  console.log();
+  console.log("  4. Start the development server:");
+  console.log(`     ${color.cyan("pnpm dev")}`);
   console.log(color.cyan("─────────────────────────────────────────────"));
   console.log();
-}
-
-async function waitForPostgres(
-  config: ProjectConfig,
-  targetDir: string,
-): Promise<void> {
-  const healthCommand = `docker compose exec -T postgres pg_isready -U ${config.postgresUser} -d ${config.databaseName}`;
-  const spinner = new Spinner();
-  spinner.start("Waiting for PostgreSQL to be healthy...");
-
-  for (let attempt = 1; attempt <= 30; attempt++) {
-    try {
-      execSync(healthCommand, { cwd: targetDir, stdio: "ignore" });
-      spinner.stop({ message: "PostgreSQL is ready", success: true });
-      return;
-    } catch {
-      await sleep(1000);
-    }
-  }
-
-  spinner.stop({
-    message: "PostgreSQL did not become healthy",
-    success: false,
-  });
-  throw new Error("PostgreSQL did not become healthy in time.");
-}
-
-async function runPostInstall(
-  config: ProjectConfig,
-  targetDir: string,
-): Promise<void> {
-  logStep("Installing dependencies...");
-  runCommand("pnpm install", targetDir);
-
-  logStep("Building shared packages...");
-  runCommand("pnpm turbo run build --filter=!@rk-kit/web", targetDir);
-
-  logStep("Starting PostgreSQL...");
-  runCommand("docker compose up -d", targetDir);
-
-  await waitForPostgres(config, targetDir);
-
-  logStep("Applying database migrations...");
-  runCommand("pnpm --filter @rk-kit/db db:migrate", targetDir);
 }
 
 async function main(): Promise<void> {
   await printBanner();
 
-  const options = parseArguments();
-  const config = await promptProjectConfig(options.projectName);
+  const framework = await promptFramework();
+  const options = await parseArguments();
+  const config = await promptProjectConfig(options.projectName, framework);
 
   logStep("Scaffolding project...");
   await installTemplate(options.targetDir);
+  await applyFrameworkTemplate(options.targetDir, framework);
   writeEnvFile(options.targetDir, config);
-
-  const shouldStart = await promptConfirm(
-    "Install dependencies, start PostgreSQL, and run migrations now?",
-    true,
-  );
-
-  if (shouldStart) {
-    await runPostInstall(config, options.targetDir);
-
-    const shouldStartDev = await promptConfirm(
-      "Start the development server now?",
-      true,
-    );
-
-    if (shouldStartDev) {
-      logStep("Starting development server...");
-      runCommand("pnpm dev", options.targetDir);
-      return;
-    }
-  }
 
   showNextSteps(options.projectName, options.targetDir);
 }
@@ -553,4 +581,6 @@ main().catch((error: unknown) => {
     color.red(error instanceof Error ? error.message : String(error)),
   );
   process.exit(1);
+}).finally(() => {
+  readlineInterface?.close();
 });

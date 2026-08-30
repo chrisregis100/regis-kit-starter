@@ -1,6 +1,6 @@
 # create-rk-kit
 
-CLI installer for the [RK Kit](https://github.com/chrisregis100/regis-kit-starter) SaaS boilerplate. Scaffolds a production-ready TanStack Start monorepo with authentication, multi-tenant PostgreSQL, and a premium landing page in minutes.
+CLI installer for the [RK Kit](https://github.com/chrisregis100/regis-kit-starter) SaaS boilerplate. Scaffolds a production-ready TanStack Start or Next.js App Router monorepo with authentication and multi-tenant PostgreSQL.
 
 ## Quick start
 
@@ -19,6 +19,9 @@ Then follow the interactive prompts. When the installer finishes:
 
 ```bash
 cd my-saas
+pnpm install
+docker compose up -d
+pnpm --filter @rk-kit/db db:migrate
 pnpm dev
 ```
 
@@ -51,41 +54,40 @@ corepack prepare pnpm@10.29.3 --activate
 ## What the installer does
 
 1. Creates a new directory named after your project.
-2. Downloads the RK Kit template from GitHub (or copies it from the local monorepo when running inside it).
-3. Asks for project, database, and OAuth settings.
+2. Asks for the app framework, project name (when omitted), database name, and OAuth providers.
+3. Downloads the RK Kit template from GitHub (or copies it from the local monorepo when running inside it).
 4. Generates a secure `BETTER_AUTH_SECRET`.
 5. Writes a ready-to-use `.env` file.
-6. Installs dependencies with `pnpm install`.
-7. Builds shared packages.
-8. Starts PostgreSQL via Docker Compose and waits for it to be healthy.
-9. Applies database migrations.
-10. Prints the next steps.
+6. Selects the TanStack Start shell or replaces it with the Next.js App Router shell.
+7. Prints the next steps.
 
 ## Interactive prompts
 
 During setup you will be asked for:
 
-| Prompt              | Default               | Purpose                                |
-| ------------------- | --------------------- | -------------------------------------- |
-| Database name       | `my-saas` → `my_saas` | PostgreSQL database name               |
-| PostgreSQL user     | `rk_kit`              | Database owner                         |
-| PostgreSQL password | `rk_kit_secret`       | Database password                      |
-| App port            | `3000`                | Port for the TanStack Start dev server |
-| Google OAuth        | disabled              | Optional social login                  |
-| GitHub OAuth        | disabled              | Optional social login                  |
+| Prompt        | Default               | Purpose                                      |
+| ------------- | --------------------- | -------------------------------------------- |
+| App framework | TanStack Start        | TanStack Start or Next.js App Router         |
+| Project name  | `my-saas`             | Asked only when the command omits a name     |
+| Database name | `my-saas` → `my_saas` | PostgreSQL database name                     |
+| OAuth         | `none`                | Choose `none`, `google`, `github`, or `both` |
 
-OAuth providers can also be configured later by editing `.env`.
+PostgreSQL uses the existing local defaults (`rk_kit` / `rk_kit_secret`) and
+the web app uses port `3000`. Add OAuth client IDs and secrets to `.env` after
+scaffolding; the selected providers identify what you intend to configure.
 
 ## Generated environment variables
 
 The installer writes a root `.env` file with the following variables already filled in:
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
-- `DATABASE_URL`
+- `APP_DB_PASSWORD` (securely generated for the restricted runtime role)
+- `DATABASE_URL` (restricted `app_user` runtime connection)
+- `DATABASE_URL_MIGRATIONS` (privileged owner connection)
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (if enabled)
-- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (if enabled)
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
 - `PORT`
 - `NODE_ENV`
 
@@ -98,6 +100,9 @@ By default the installer downloads `chrisregis100/regis-kit-starter`. To use a f
 ```bash
 RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
 ```
+
+The override must use the RK Kit repository layout and include
+`templates/nextjs-app-router` when the Next.js option is selected.
 
 ## Manual install alternative
 

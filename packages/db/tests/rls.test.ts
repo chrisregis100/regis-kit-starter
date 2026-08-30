@@ -9,13 +9,22 @@
  * reachable the suite is skipped so `pnpm test` stays usable offline.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { config as loadDotenv } from 'dotenv'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Pool } from 'pg'
+
+loadDotenv({
+  path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env'),
+})
 
 const ADMIN_URL =
   process.env['RLS_TEST_ADMIN_URL'] ??
+  process.env['DATABASE_URL_MIGRATIONS'] ??
   'postgresql://rk_kit:rk_kit_secret@localhost:5432/rk_kit_dev'
 const APP_URL =
   process.env['RLS_TEST_APP_URL'] ??
+  process.env['DATABASE_URL'] ??
   'postgresql://app_user:change-me-in-production@localhost:5432/rk_kit_dev'
 
 const ORG_A = 'rls-test-org-a'

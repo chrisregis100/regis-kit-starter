@@ -1,7 +1,7 @@
 # RK Kit — Ship your SaaS in days, not months
 
 [![Version](https://img.shields.io/npm/v/create-rk-kit)](https://www.npmjs.com/package/create-rk-kit)
-[![License](https://img.shields.io/github/license/rk-kit/regis-kit-starter)](LICENSE)
+[![License](https://img.shields.io/github/license/chrisregis100/regis-kit-starter)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%3E%3D22-339933)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6)
 
@@ -42,7 +42,7 @@ Most SaaS projects waste the first two weeks on the same boilerplate: auth flow,
 
 ## Stack
 
-- **Framework**: [TanStack Start](https://tanstack.com/start/)
+- **Framework**: [TanStack Start](https://tanstack.com/start/) (default) or [Next.js App Router](https://nextjs.org/docs/app)
 - **Auth**: [Better Auth](https://www.better-auth.com/)
 - **Email**: [Brevo](https://www.brevo.com/) transactional API (`@getbrevo/brevo`)
 - **Database**: PostgreSQL + [Drizzle ORM](https://orm.drizzle.team/) + RLS
@@ -60,10 +60,14 @@ npx create-rk-kit@latest my-saas
 pnpm dlx create-rk-kit@latest my-saas
 ```
 
-The CLI asks for your project name, database credentials, and optional OAuth providers, then installs dependencies, starts PostgreSQL, and applies migrations automatically.
+The first prompt selects TanStack Start (default) or Next.js App Router. The
+remaining prompts configure the database name and intended OAuth providers.
 
 ```bash
 cd my-saas
+pnpm install
+docker compose up -d
+pnpm --filter @rk-kit/db db:migrate
 pnpm dev
 ```
 
@@ -108,7 +112,8 @@ All commands below are run from the repository root unless stated otherwise.
 
 ### CLI installer (recommended)
 
-The `create-rk-kit` CLI scaffolds a new project and runs an interactive configuration wizard so every environment value is set before the server starts.
+The `create-rk-kit` CLI scaffolds the same RK Kit monorepo with either a
+TanStack Start or Next.js App Router web shell.
 
 ```bash
 # npm
@@ -123,27 +128,31 @@ yarn create rk-kit my-saas
 
 The installer performs the following steps automatically:
 
-1. Copies the RK Kit monorepo template into a new directory (`my-saas`).
-2. Asks for the project name, database name, and database credentials.
-3. Generates a secure `BETTER_AUTH_SECRET`.
-4. Optionally configures Google and GitHub OAuth.
-5. Writes a ready-to-use `.env` file.
-6. Runs `pnpm install` and builds the shared packages.
-7. Starts PostgreSQL via Docker Compose and applies migrations.
-8. Prints the local URL and next commands.
+1. Asks for the app framework first (TanStack Start is the default).
+2. Asks for a project name only when it is omitted from the command.
+3. Asks for the database name and intended OAuth providers.
+4. Copies the monorepo and activates the selected `apps/web` shell.
+5. Generates a secure `BETTER_AUTH_SECRET` and writes `.env`.
+6. Prints the next commands.
 
 After the installer finishes:
 
 ```bash
 cd my-saas
+pnpm install
+docker compose up -d
+pnpm --filter @rk-kit/db db:migrate
 pnpm dev              # http://localhost:3000
 ```
 
-> The CLI uses the GitHub repository `rk-kit/regis-kit-starter` by default. If you are working from a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable before running the installer:
+> The CLI uses the GitHub repository `chrisregis100/regis-kit-starter` by default. If you are working from a fork or a private repo, set the `RK_KIT_TEMPLATE_REPO` environment variable before running the installer:
 >
 > ```bash
 > RK_KIT_TEMPLATE_REPO=your-org/your-repo npx create-rk-kit@latest my-saas
 > ```
+>
+> The override must contain `templates/nextjs-app-router` to support the
+> Next.js selection.
 
 ### Manual install
 
@@ -159,7 +168,7 @@ openssl rand -base64 32
 
 # 3. Copy and edit the environment file
 cp .env.example .env
-# Edit .env: paste the secret, set DATABASE_URL, configure optional OAuth providers.
+# Edit .env: paste the secret and configure optional OAuth providers.
 
 # 4. Install dependencies and build shared packages
 pnpm install
@@ -195,14 +204,16 @@ These are used only by `docker-compose.yml` to create the local database:
 
 | Variable | Default | Description |
 |---|---|---|
-| `POSTGRES_USER` | `rk_kit` | Database owner |
-| `POSTGRES_PASSWORD` | `rk_kit_secret` | Database password |
+| `POSTGRES_USER` | `rk_kit` | Privileged database owner used for migrations |
+| `POSTGRES_PASSWORD` | `rk_kit_secret` | Database owner password |
 | `POSTGRES_DB` | `rk_kit_dev` | Database name |
+| `APP_DB_PASSWORD` | `rk_kit_app_secret` | Restricted `app_user` password |
 
-Make sure `DATABASE_URL` matches these credentials, e.g.:
+The app and migration tooling intentionally use separate credentials:
 
 ```bash
-DATABASE_URL=postgresql://rk_kit:rk_kit_secret@localhost:5432/rk_kit_dev
+DATABASE_URL=postgresql://app_user:rk_kit_app_secret@localhost:5432/rk_kit_dev
+DATABASE_URL_MIGRATIONS=postgresql://rk_kit:rk_kit_secret@localhost:5432/rk_kit_dev
 ```
 
 ### OAuth providers (optional)
@@ -270,7 +281,7 @@ Webhook endpoints to register:
 When running the full production image via `docker compose --profile app up`, Compose injects the following defaults if they are not set:
 
 ```bash
-DATABASE_URL_DOCKER=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+DATABASE_URL_DOCKER=postgresql://app_user:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
 BETTER_AUTH_URL=http://localhost:3000
 PORT=3000
 HOST=0.0.0.0
@@ -288,6 +299,9 @@ RK Kit uses **Drizzle ORM** for schema management and **PostgreSQL Row-Level Sec
 # Dev database on :5432 with persistent volume
 docker compose up -d
 ```
+
+On first initialization, Compose creates the non-superuser `app_user` runtime
+role. The application connects as this role so PostgreSQL enforces RLS.
 
 ### Apply migrations
 
@@ -307,12 +321,12 @@ pnpm --filter @rk-kit/db db:generate
 pnpm --filter @rk-kit/db db:studio
 ```
 
-> ⚠️ **RLS note**: the runtime `DATABASE_URL` should connect as the restricted `app_user` role (created by the RLS migration), not as the postgres superuser — superusers bypass row-level security. See [docs/ai-skills/data-access.md](docs/ai-skills/data-access.md).
+> ⚠️ **RLS note**: the runtime `DATABASE_URL` must connect as the restricted `app_user` role, not as the PostgreSQL owner — superusers bypass row-level security. Use `DATABASE_URL_MIGRATIONS` only for migrations. See [docs/ai-skills/data-access.md](docs/ai-skills/data-access.md).
 
 ## Development workflow
 
 ```bash
-pnpm dev                  # Start dev servers via Turbo (TanStack Start on :3000)
+pnpm dev                  # Start the selected web framework on :3000
 pnpm build                # Build the web app and shared packages
 pnpm lint                 # Run linters across the workspace
 pnpm typecheck            # Run TypeScript checks across the workspace
@@ -384,13 +398,14 @@ The production image is defined in [`apps/web/Dockerfile`](apps/web/Dockerfile).
 ### Database connection errors
 
 1. Verify PostgreSQL is running: `docker compose ps`
-2. Verify `DATABASE_URL` matches `POSTGRES_*` values in `.env`
+2. Verify `DATABASE_URL` uses `app_user` and `APP_DB_PASSWORD` from `.env`
 3. Check the database is reachable: `pg_isready -h localhost -p 5432`
-4. If you changed `POSTGRES_*` after the first `docker compose up`, the volume still contains the old credentials. Either update `DATABASE_URL` or prune the volume (`docker compose down -v` — this destroys data).
+4. If you changed `POSTGRES_*` or `APP_DB_PASSWORD` after the first `docker compose up`, the volume still contains the old credentials. Either restore the original values or prune the volume (`docker compose down -v` — this destroys data).
 
 ### Migrations fail
 
-Ensure the database is reachable and that `DATABASE_URL` is correct, then run:
+Ensure the database is reachable and that `DATABASE_URL_MIGRATIONS` uses the
+owner credentials, then run:
 
 ```bash
 pnpm --filter @rk-kit/db db:migrate
@@ -414,10 +429,11 @@ bash scripts/smoke.sh
 ## Project architecture
 
 ```
-apps/web                  product app (TanStack Start) — customize freely
+apps/web                  selected product shell (TanStack Start or Next.js)
 apps/web/src/services     business logic (Drizzle via withTenant)
-apps/web/src/server       TanStack Start server functions (front RPC boundary)
+apps/web/src/server       TanStack Start server functions (TanStack variant)
 apps/web/src/api          REST handlers + middleware for /api/v1/*
+templates/nextjs-app-router Next.js App Router shell used by create-rk-kit
 packages/config           Zod-validated environment
 packages/db               Drizzle + migrations + RLS + withTenant
 packages/auth             Better Auth + session helpers
